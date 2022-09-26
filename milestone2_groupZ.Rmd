@@ -1,0 +1,72 @@
+---
+title: 'PHW251 Fall 2022 Project Milestone #2'
+author: "Aubrey Robinson, Elizabeth Guzman, Tin Ho (Group Z)"
+date: "Due: 2022-10-03"
+output: pdf_document
+---
+
+
+# Task for Milestone 2
+
+[Info per bCourse](https://bcourses.berkeley.edu/courses/1517565/assignments/8454501)
+
+
+- Description of dataset
+  - What is the data source? (1-2 sentences on where the data is coming from, dates included, etc.)
+  - How does the dataset relate to the group problem statement and question?
+- Import statement
+  - NOTE: Please use datasets available in the PHW251 Project Data github repo (Links to an external site.) (this is important to make sure everyone is using the same datasets)
+  - Use appropriate import function and package based on the type of file
+  - Utilize function arguments to control relevant components (i.e. change column types, column names, missing values, etc.)
+  - Document the import process
+- Identify data types for 5+ data elements/columns/variables
+  - Identify 5+ data elements required for your specified scenario. If <5 elements are required to complete the analysis, please choose additional variables of interest in the data set to explore in this milestone.
+  - Utilize functions or resources in RStudio to determine the types of each data element (i.e. character, numeric, factor)
+  - Identify the desired type/format for each variable—will you need to convert any columns to numeric or another type?
+- Provide a basic description of the 5+ data elements
+  - Numeric: mean, median, range
+  - Character:  unique values/categories
+  - Or any other descriptives that will be useful to the analysis
+
+
+
+# Loading R libraries
+
+```{r load-lib, include=TRUE, echo=TRUE}
+library(tidyverse)
+library(dplyr)
+
+```
+
+# Loading data
+
+```{r load-data, echo=T, results="markup"}
+
+demographics_path = 'data/ca_county_demographics.csv'
+demographics_data = read_csv( demographics_path )
+
+summary( demographics_data )
+
+# more R code tbd.
+
+
+```
+
+
+
+\newpage
+
+# Answers to Question 1
+
+tbd
+
+```{r Q1}
+
+# r code here tbd ...
+```
+\newpage
+
+# Answers to Question 2
+
+tbd ...
+
