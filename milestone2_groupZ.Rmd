@@ -37,6 +37,31 @@ library(tidyverse)
 library(dplyr)
 
 ```
+\newpage
+
+
+# Description of dataset
+
+-  What is the data source? (1-2 sentences on where the data is coming from, dates included, etc.)
+
+- How does the dataset relate to the group problem statement and question?
+
+
+(Answeres tbd)
+
+
+\newpage
+
+
+
+- Import statement
+  - NOTE: Please use datasets available in the PHW251 Project Data github repo (Links to an external site.) (this is important to make sure everyone is using the same datasets)
+  - Use appropriate import function and package based on the type of file
+  - Utilize function arguments to control relevant components (i.e. change column types, column names, missing values, etc.)
+  - Document the import process
+
+
+
 
 # Loading data
 
@@ -45,10 +70,12 @@ library(dplyr)
 demographics_path = 'data/ca_county_demographics.csv'
 demographics_data = read_csv( demographics_path )
 
-summary( demographics_data )
 
 # more R code tbd.
 
+#   - Utilize function arguments to control relevant components (i.e. change column types, column names, missing values, etc.)
+
+# // maybe add code to handle missing data, as appropriate
 
 ```
 
@@ -58,15 +85,65 @@ summary( demographics_data )
 
 # Answers to Question 1
 
-tbd
+# Identify data types for 5+ data elements/columns/variables
+  
+  
+  - Identify 5+ data elements required for your specified scenario. If <5 elements are required to complete the analysis, please choose additional variables of interest in the data set to explore in this milestone.
+  
+  - Utilize functions or resources in RStudio to determine the types of each data element (i.e. character, numeric, factor)
+  
+  - Identify the desired type/format for each variable—will you need to convert any columns to numeric or another type?
+  
 
-```{r Q1}
+```{r data-types}
 
-# r code here tbd ...
+# r code here tbd on mean, median, range ...
+
+str( demographics_data )
+
+
 ```
-\newpage
 
-# Answers to Question 2
+## demographics_data
 
-tbd ...
+- the name column holds a variable of character string type, and seems to contain the name of a county.
+- pop2012 is a numeric field containing the number of people of the named county, in 2012.  
 
+
+(more tbd)
+  
+  
+\newpage 
+
+# Provide a basic description of the 5+ data elements
+  - Numeric: mean, median, range
+  - Character:  unique values/categories
+  - Or any other descriptives that will be useful to the analysis
+
+```{r data-stats}
+
+# r code here tbd on mean, median, range ...
+
+summary( demographics_data )
+```
+
+
+## demographics_data
+
+Code to count number of unique counties
+
+```{r count-uniq-counties }
+
+# code to find inter-quartile range for pop2012    
+# TBD
+
+uniq_countries = unique( demographics_data[["name"]])
+//n(uniq_countries)
+//TBD
+
+```
+
+
+
+- For the name column, it does not make much sense to talk about means or range.
+- pop2012 has a mean of 650129, and an inter-quartile range of (48492, 645995)
