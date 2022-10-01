@@ -64,6 +64,8 @@ demographics_data = read_csv( demographics_path,
 # rest of the columns have reasonable names, so left them as is.
 demographics_data = rename( demographics_data, id="...1")
 
+# View(demographics_data)
+
 # more R code tbd.
 
 # Loading Mortality Data 
@@ -73,6 +75,9 @@ mortality_data <- read_csv(mortality_path,
                            na= c("", "NA", "-"),
                            show_col_types=F)
 
+mortality_data <- mortality_data %>% mutate_all(~replace( ., is.na(.), 0))
+
+# View(mortality_data)
 # There are NA values in mortality_data, so we need to replace NA w/ 0
  
 ```
