@@ -31,7 +31,9 @@ library(dplyr)
 - How does the dataset relate to the group problem statement and question?
 
 
-(Answeres tbd)
+The mortality data was sourced from the CA Dept of Public Health's Death 
+Profiles by County from 2014-2020. This data will help the team identify 
+counties with high occurrences of death caused by chronic health conditions. 
 
 
 \newpage
@@ -59,17 +61,20 @@ demographics_data = read_csv( demographics_path,
                               na = c("", "NA", "-"), 
                               show_col_types=F )
 # the first column contains id number, but it is unamed, so renaming it
-# rest of the columsn have reasonable names, so left them as is.
+# rest of the columns have reasonable names, so left them as is.
 demographics_data = rename( demographics_data, id="...1")
-
-
-
 
 # more R code tbd.
 
+# Loading Mortality Data 
 
+mortality_path <- 'data/ca_county_mortality.csv'
+mortality_data <- read_csv(mortality_path, 
+                           na= c("", "NA", "-"),
+                           show_col_types=F)
 
-
+# There are NA values in mortality_data, so we need to replace NA w/ 0
+ 
 ```
 
 
@@ -95,6 +100,12 @@ str( demographics_data )
 typeof( demographics_data[["name"]])
 typeof( demographics_data[["pop2012"]])
 
+str(mortality_data)
+typeof(mortality_data[["County"]])
+typeof(mortality_data[["Geography_Type"]])
+typeof(mortality_data[["Cause"]])
+typeof(mortality_data[["Count"]])
+
 
 ```
 
@@ -103,12 +114,17 @@ typeof( demographics_data[["pop2012"]])
 - The name column holds a variable of character string type, and seems to contain the name of counties.  We may consider converting this into a Factor, will do so later on if we find such conversion to be useful.  
 - pop2012 is a numeric field containing the number of people of the named county, in 2012.  We can perform computation such as mean calculaations on this field, see below, so there isn't likely any need for conversion.
 
+## mortality_data
+
+-County is a character string. 
+-Geography_Type is a character string. 
+-Cause is a character string.
+-Count is a number data type. It is the count of events.
+
+
 
 (more tbd)
   
-
-
-
   
 \newpage 
 
@@ -123,6 +139,7 @@ typeof( demographics_data[["pop2012"]])
 # r code here tbd on mean, median, range ...
 
 summary( demographics_data )
+
 ```
 
 
@@ -164,3 +181,37 @@ printf( "The interquartile range for pop2012 set was found to range from %g to %
 - For the name column, it does not make much sense to talk about means or range, but we did found that our data set has 58 unique counties (ie, all counties of California is present in this data set)
 - pop2012 has a mean of 650129, and an inter-quartile range of (48492, 645995)
 
+## Mortality_data Descriptions
+
+```{r }
+
+#Summary of full dataset
+
+summary(mortality_data)
+
+# Unique characters: County, Geography Type, Causes
+
+mortality_counties <- unique(mortality_data$County)
+mortality_counties
+
+mortality_geo_type <- unique(mortality_data$Geography_Type)
+mortality_geo_type
+
+mortality_causes <- unique(mortality_data$Cause)
+mortality_causes
+
+# Summary for Numeric Data - Count 
+## Still have to replace NA's with 0
+
+summary(mortality_data$Count)
+
+```
+
+-There are 58 unique characters in the variable "County". 
+-There are 2 unique characters in the varaible "Geography_Type". 
+If Geography_Type is Resident, the death was of a CA resident but may have 
+occurred out of state. If Geography_Type is Occurrence, the death occurred in
+CA but the person may not have been a CA resident. Our research question asks 
+us to focus on "occurrences".
+-There are 15 unique "Causes" of death. We are interested in
+chronic health conditions. 
