@@ -54,6 +54,10 @@ counties with high occurrences of death caused by chronic health conditions.
 
 ## Loading data
 
+We will use dplyr's read_csv to import the data, 
+since they are all presented as csv files.
+
+
 ```{r load-data, echo=T, results="markup"}
 
 #   - Utilize function arguments to control relevant components 
@@ -69,8 +73,6 @@ demographics_data = rename( demographics_data, id="...1")
 
 # View(demographics_data)
 
-# more R code tbd.
-
 # Loading Mortality Data 
 
 mortality_path <- 'data/ca_county_mortality.csv'
@@ -83,6 +85,35 @@ mortality_data <- mortality_data %>% mutate_all(~replace( ., is.na(.), 0))
 # View(mortality_data)
 # There are NA values in mortality_data, so we need to replace NA w/ 0
  
+
+# Loading HCAI funding Data 
+
+funding_path = 'data/hcai_healthcare_construction.csv'
+funding_data <- read_csv(  funding_path, 
+                           na= c("", "NA", "-"),
+                           show_col_types=F       )
+
+# finding where in data frame has na
+# https://www.geeksforgeeks.org/find-columns-and-rows-with-na-in-r-dataframe/
+funding_data_no_CtyColl = select(funding_data, -c("Collection of Counties"))
+which(is.na(funding_data_no_CtyColl), arr.ind=T)
+# and we find that only the column "Collection of Counties" have na
+# we will leave this for now since it may just be a colloquial reference
+# unimportant for our data analysis.
+# no replacement for na with 0 will be done on this data frame.
+
+
+# the Costs column has human data, eg $50,890,315.00
+# and we need to strip the dollar sign, the commas, 
+# and convert to number.  
+# ref: https://stackoverflow.com/questions/31944103/convert-currency-with-commas-into-numeric
+# we create a new column for this called "Numeric_Cost", 
+# but could have potentially done an in-place replacement
+funding_data = funding_data %>% 
+  mutate(Numeric_Cost = as.numeric(
+    gsub( '[$,]', '', funding_data[["Total Costs of OSHPD Projects"]] ) 
+  ))
+
 ```
 
 
@@ -102,7 +133,6 @@ mortality_data <- mortality_data %>% mutate_all(~replace( ., is.na(.), 0))
 
 ```{r data-types}
 
-# r code here tbd on mean, median, range ...
 
 str( demographics_data )
 typeof( demographics_data[["name"]])
@@ -114,7 +144,9 @@ typeof(mortality_data[["Geography_Type"]])
 typeof(mortality_data[["Cause"]])
 typeof(mortality_data[["Count"]])
 
-
+str(funding_data)
+typeof(funding_data[["Total Costs of OSHPD Projects"]])
+typeof(funding_data[["Numeric_Cost"]])
 ```
 
 ## demographics_data
@@ -124,14 +156,20 @@ typeof(mortality_data[["Count"]])
 
 ## mortality_data
 
--County is a character string. 
--Geography_Type is a character string. 
--Cause is a character string.
--Count is a number data type. It is the count of events.
+- County is a character string. 
+- Geography_Type is a character string. 
+- Cause is a character string.
+- Count is a number data type. It is the count of events.
 
+## HCAI funding data
 
-
-(more tbd)
+- County is a character string.  However, there is also a number in it.  
+eg "01 - Alameda".  To join this data frame with the others, 
+there is likely some manipulation needed to strip out the number part
+eg remove "01 - " and leave it with county names only
+- Total Costs of OSHPD Projects was meant to be a numeric field,
+but it has dollar sign and commas, and so a string parsing to strip them out,
+and converted to numeric value, was done during the csv data import process above.
   
   
 \newpage 
@@ -142,18 +180,11 @@ typeof(mortality_data[["Count"]])
   - Character:  unique values/categories
   - Or any other descriptives that will be useful to the analysis
 
-```{r data-stats}
-
-# r code here tbd on mean, median, range ...
-
-summary( demographics_data )
-
-```
 
 
 ## demographics_data
 
-Code to count number of unique counties
+Code to count number of unique counties:
 
 ```{r count-uniq-counties }
 
@@ -168,7 +199,13 @@ uniq_counties_count = count(uniq_counties)
 
 printf( "The number of unique counties in the demographics data set was: %g", 
         uniq_counties_count )
+```
 
+Code to find statistics of numerical data (population in 2012):
+
+```{r data-stats}
+
+summary( demographics_data )
 
 # IQR for numeric data
 Q1     = quantile(  demographics_data[["pop2012"]], probs = 0.25, na.rm=T )
@@ -209,19 +246,30 @@ mortality_causes <- unique(mortality_data$Cause)
 mortality_causes
 
 # Summary for Numeric Data - Count 
-## Still have to replace NA's with 0
 
 summary(mortality_data$Count)
 
 ```
 
--There are 58 unique characters in the variable "County". 
--There are 2 unique characters in the varaible "Geography_Type". 
+- There are 58 unique characters in the variable "County". 
+- There are 2 unique characters in the varaible "Geography_Type". 
 If Geography_Type is Resident, the death was of a CA resident but may have 
 occurred out of state. If Geography_Type is Occurrence, the death occurred in
 CA but the person may not have been a CA resident. Our research question asks 
 us to focus on "occurrences".
--There are 15 unique "Causes" of death. We are interested in
+- There are 15 unique "Causes" of death. We are interested in
 chronic health conditions. 
--The mean Count of mortality events is 189.8. The median is 0. and the
+- The mean Count of mortality events is 189.8. The median is 0. and the
 IQR is 41.
+
+
+## HCAI Funding Data Descriptions
+
+
+```{r funding-stats}
+
+summary(funding_data)
+
+```
+
+- we find that the OSHPD Project costs has a mean value of $59M and a median of $2.8M
