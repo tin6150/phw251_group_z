@@ -30,6 +30,10 @@ library(dplyr)
 
 - How does the dataset relate to the group problem statement and question?
 
+The county demographic data is from the 2012 California census. This dataset 
+will help us identify counties that meet OHE's criteria of low population per 
+square mile, high median age, and a high proportion of renters vs. homeowners.
+
 
 The mortality data was sourced from the CA Dept of Public Health's Death 
 Profiles by County from 2014-2020. This data will help the team identify 
@@ -45,7 +49,6 @@ counties with high occurrences of death caused by chronic health conditions.
   - Use appropriate import function and package based on the type of file
   - Utilize function arguments to control relevant components (i.e. change column types, column names, missing values, etc.)
   - Document the import process
-
 
 
 
@@ -220,3 +223,5 @@ CA but the person may not have been a CA resident. Our research question asks
 us to focus on "occurrences".
 -There are 15 unique "Causes" of death. We are interested in
 chronic health conditions. 
+-The mean Count of mortality events is 189.8. The median is 0. and the
+IQR is 41.
