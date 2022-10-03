@@ -27,6 +27,8 @@ library(dplyr)
 # Description of dataset
 
 -  What is the data source? (1-2 sentences on where the data is coming from, dates included, etc.)
+We have 3 different data sets that we will eventually be merging into a 
+single one. Thye are county, mortality, and HCAI funding data. 
 The county demographic data is from the 2012 California census. The mortality
 data was sourced from the CA Dept of Public Health's Death 
 Profiles by County from 2014-2020. The HCAI funding data set comes from
