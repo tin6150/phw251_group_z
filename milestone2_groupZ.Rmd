@@ -27,6 +27,7 @@ library(dplyr)
 # Description of dataset
 
 -  What is the data source? (1-2 sentences on where the data is coming from, dates included, etc.)
+
 We have 3 different data sets that we will eventually be merging into a 
 single one. Thye are county, mortality, and HCAI funding data. 
 The county demographic data is from the 2012 California census. The mortality
@@ -83,11 +84,12 @@ demographics_data = rename( demographics_data, id="...1")
 # Loading Mortality Data 
 
 mortality_path <- 'data/ca_county_mortality.csv'
-mortality_data <- read_csv(mortality_path, 
+mortality_data_raw <- read_csv(mortality_path, 
                            na= c("", "NA", "-"),
                            show_col_types=F)
 
-mortality_data <- mortality_data %>% mutate_all(~replace( ., is.na(.), 0))
+
+mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
 
 # View(mortality_data)
 # There are NA values in mortality_data, so we need to replace NA w/ 0
@@ -253,8 +255,8 @@ mortality_causes <- unique(mortality_data$Cause)
 mortality_causes
 
 # Summary for Numeric Data - Count 
-
 summary(mortality_data$Count)
+summary(mortality_data_raw$Count, na.rm=T)
 
 ```
 
@@ -266,9 +268,13 @@ CA but the person may not have been a CA resident. Our research question asks
 us to focus on "occurrences".
 - There are 15 unique "Causes" of death. We are interested in
 chronic health conditions. 
-- The mean Count of mortality events is 189.8. The median is 0. and the
-IQR is 41.
-
+- The statistics for the numeric column Count on mortality events is a little tricky, 
+as there are many na in this dataset.
+If we replaced na with 0, we find a mean of 189.8, a median is 0 and an IQR of 41.
+On the other hand, if we skip over entries with na, 
+we find a mean of 273.8, a median of 15 and an IQR of 79.
+As we explore more on these datasets in future milestone we will develop 
+a keener approach on how to hadle these na.  
 
 ## HCAI Funding Data Descriptions
 
