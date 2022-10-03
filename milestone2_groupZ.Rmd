@@ -27,17 +27,22 @@ library(dplyr)
 # Description of dataset
 
 -  What is the data source? (1-2 sentences on where the data is coming from, dates included, etc.)
+The county demographic data is from the 2012 California census. The mortality
+data was sourced from the CA Dept of Public Health's Death 
+Profiles by County from 2014-2020. The HCAI funding data set comes from
+the CA.gov website which is the California open data portal, which includes
+data from 2013-2022.
 
 - How does the dataset relate to the group problem statement and question?
 
-The county demographic data is from the 2012 California census. This dataset 
-will help us identify counties that meet OHE's criteria of low population per 
-square mile, high median age, and a high proportion of renters vs. homeowners.
-
-
-The mortality data was sourced from the CA Dept of Public Health's Death 
-Profiles by County from 2014-2020. This data will help the team identify 
+The demographic dataset will help us identify counties that meet OHE's 
+criteria of low population per square mile, high median age, and a high
+proportion of renters vs. homeowners.
+The mortality data will help the team identify 
 counties with high occurrences of death caused by chronic health conditions. 
+The HCAI funding dataset will help us identify which projects are in closure
+and which counties have been receiving a low amount of funding to help us 
+determine which counties should receive more funding.
 
 
 \newpage
@@ -93,11 +98,11 @@ funding_data <- read_csv(  funding_path,
                            na= c("", "NA", "-"),
                            show_col_types=F       )
 
-# finding where in data frame has na
+# finding where in the data frame there is an 'na'
 # https://www.geeksforgeeks.org/find-columns-and-rows-with-na-in-r-dataframe/
 funding_data_no_CtyColl = select(funding_data, -c("Collection of Counties"))
 which(is.na(funding_data_no_CtyColl), arr.ind=T)
-# and we find that only the column "Collection of Counties" have na
+# and we find that only the column "Collection of Counties" has 'na'
 # we will leave this for now since it may just be a colloquial reference
 # unimportant for our data analysis.
 # no replacement for na with 0 will be done on this data frame.
@@ -105,7 +110,7 @@ which(is.na(funding_data_no_CtyColl), arr.ind=T)
 
 # the Costs column has human data, eg $50,890,315.00
 # and we need to strip the dollar sign, the commas, 
-# and convert to number.  
+# and convert them to numbers.  
 # ref: https://stackoverflow.com/questions/31944103/convert-currency-with-commas-into-numeric
 # we create a new column for this called "Numeric_Cost", 
 # but could have potentially done an in-place replacement
