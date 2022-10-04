@@ -1,12 +1,9 @@
 ---
-title:    '~~~ DRAFT DRAFT DRAFT ~~~'
-subtitle: 'PHW251 Fall 2022 Project Milestone #2'
+title: 'PHW251 Fall 2022 Project Milestone #2'
 author:   "Aubrey Robinson, Elizabeth Guzman, Tin Ho (Group Z)"
 date:     "Due: 2022-10-03"
 output: pdf_document
 ---
-
-# ** DRAFT  DRAFT **
 
 # Task for Milestone 2
 
@@ -273,8 +270,10 @@ as there are many na in this dataset.
 If we replaced na with 0, we find a mean of 189.8, a median is 0 and an IQR of 41.
 On the other hand, if we skip over entries with na, 
 we find a mean of 273.8, a median of 15 and an IQR of 79.
-As we explore more on these datasets in future milestone we will develop 
-a keener approach on how to hadle these na.  
+Finally, we observe that this columnn probably should have been "pivot wider" 
+to segregate the various causes of disease vs Total, so the statistics obtained may 
+not make a lot of sense.  As we explore more on these datasets in future milestone we will develop 
+a keener approach on how to handle these na's.  
 
 ## HCAI Funding Data Descriptions
 
