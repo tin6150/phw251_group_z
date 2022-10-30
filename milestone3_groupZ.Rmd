@@ -1,0 +1,205 @@
+---
+title: 'PHW251 Fall 2022 Project Milestone § 3'
+author:   "Aubrey Robinson, Elizabeth Guzman, Tin Ho (Group Z)"
+date:     "Due: 2022-11-07"
+output: pdf_document
+---
+
+# Project and Milestone overview
+
+[Pasted to group's gdoc:](https://docs.google.com/document/d/1u4-f0KCUB0QGxWI1VVgfEgEaTmQbt-Jk1uIgWP-0VYk/edit#)
+
+
+# Loading R libraries
+
+(R code in Rmd, not shown in PDF)
+
+++FIXME++ need to find way to skip the warning messages as well 
+
+```{r load-lib, echo=FALSE}
+library(tidyverse)
+library(dplyr)
+
+```
+
+## Loading data
+
+(R code in Rmd, not shown in PDF, this code block from Milestone 2)
+
+```{r load-data, echo=FALSE}
+
+#   - Utilize function arguments to control relevant components 
+#     (i.e. change column types, column names, missing values, etc.)
+
+demographics_path = 'data/ca_county_demographics.csv'
+demographics_data = read_csv( demographics_path, 
+                              na = c("", "NA", "-"), 
+                              show_col_types=F )
+# the first column contains id number, but it is unamed, so renaming it
+# rest of the columns have reasonable names, so left them as is.
+demographics_data = rename( demographics_data, id="...1")
+
+# View(demographics_data)
+
+# Loading Mortality Data 
+
+mortality_path <- 'data/ca_county_mortality.csv'
+mortality_data_raw <- read_csv(mortality_path, 
+                           na= c("", "NA", "-"),
+                           show_col_types=F)
+
+
+mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
+
+# View(mortality_data)
+# There are NA values in mortality_data, so we need to replace NA w/ 0
+ 
+
+# Loading HCAI funding Data 
+
+funding_path = 'data/hcai_healthcare_construction.csv'
+funding_data <- read_csv(  funding_path, 
+                           na= c("", "NA", "-"),
+                           show_col_types=F       )
+
+# finding where in the data frame there is an 'na'
+# https://www.geeksforgeeks.org/find-columns-and-rows-with-na-in-r-dataframe/
+funding_data_no_CtyColl = select(funding_data, -c("Collection of Counties"))
+which(is.na(funding_data_no_CtyColl), arr.ind=T)
+# and we find that only the column "Collection of Counties" has 'na'
+# we will leave this for now since it may just be a colloquial reference
+# unimportant for our data analysis.
+# no replacement for na with 0 will be done on this data frame.
+
+
+# the Costs column has human data, eg $50,890,315.00
+# and we need to strip the dollar sign, the commas, 
+# and convert them to numbers.  
+# ref: https://stackoverflow.com/questions/31944103/convert-currency-with-commas-into-numeric
+# we create a new column for this called "Numeric_Cost", 
+# but could have potentially done an in-place replacement
+funding_data = funding_data %>% 
+  mutate(Numeric_Cost = as.numeric(
+    gsub( '[$,]', '', funding_data[["Total Costs of OSHPD Projects"]] ) 
+  ))
+
+
+```
+
+\newpage
+
+
+# Subset rows or columns, as needed
+
+++ Not sure at this point if need to subset
+   Maybe remove the race columns from demographics_data if they are not needed?
+
+  
+\newpage 
+
+# Create New Variables
+
+- Create new variables needed for analysis (minimum 2)
+  - New variables should be created based on existing columns; for example
+    - Calculating a rate
+    - Combining character strings
+    
+## Renters vs Homeowners
+
+The following code block create a new variable rent_own_ratio
+
+```{r create_new_vars}
+
+## Renters vs Homeowners Ratio
+demographics_data = demographics_data %>%
+  mutate( rent_own_ratio = renter_occ / owner_occ )
+
+
+```
+\newpage 
+
+
+
+# Clean variables needed for analysis (minimum 2)
+
+
+In the funding_data table, County is coded like "19 - Los Angeles", "01 - Alameda".
+We need county name by itself for later table join process, 
+thus we need to "clean out" the id portion in this data field.
+We store this cleaned data in a new column called
+county_name.
+
+We note that the county code is prefixed with 0 when they are single digits,
+thus it is always the first 5 chars that need to be stripped out.
+
+```{r clean_vars}
+
+funding_data = funding_data %>%
+  mutate( county_name = str_sub( County, 6 ))
+
+
+#  ++ Is the data field coded as R's date data structure?
+typeof( funding_data$`Data Generation Date` )
+typeof( as_date("2022-11-01"))
+
+```
+
+\newpage 
+
+# Data dictionary based on clean dataset (minimum 4 data elements)
+
+
+__(I (Tin) am fuzzy what's needed here.  no code?  just need to describe a few variables?)__
+
+- We find all 3 tables have county names in it, which can be used as key for joining these tables.
+However, in 1 case we need to use a cleaned version of this column.  Overall, 
+county name is a character data field contained in :
+  - demographics_data  Name
+  - funding_data       county_name 
+  - mortality_data     County
+
+
+\newpage 
+
+# One or more tables with descriptive statistics for 4 data element
+
+
+
+```{r desc_stat}
+
+
+uniq_cause_desc = mortality_data %>% pull(Cause_Desc) %>% unique()
+uniq_cause_desc
+
+chronic_desc = c( 
+  "Chronic lower respiratory diseases",
+"Parkinson's disease"
+  )
+
+chronic_desc_readd_back = c( 
+  "Diabetes mellitus",
+ "Diseases of heart",
+"Essential hypertension and hypertensive renal disease",
+"Chronic liver disease and cirrhosis"
+)
+
+
+# task detail:
+# a total count of occurrences attributed to known chronic health conditions by county, circa 2014-2020 (you may encounter missing values here, it's understood that replacing NAs with 0 is appropriate). Once the mortality data is summarized at the county level, you will join your dataframe with the county demographic data from above.
+
+table_1 = mortality_data %>% 
+  filter( Cause_Desc %in% chronic_desc ) #%>%
+  
+table_2 = mortality_data %>% 
+  filter( Strata == "Total Population") %>%
+  group_by( County, Cause_Desc ) %>%
+  summarize( avg_count = mean(Count), 
+             County, Cause )
+
+table_1
+
+```
+
+\newpage 
+
+
