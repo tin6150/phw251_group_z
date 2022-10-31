@@ -139,8 +139,8 @@ funding_data = funding_data %>%
 
 
 #  ++ Is the data field coded as R's date data structure?
-typeof( funding_data$`Data Generation Date` )
-typeof( as_date("2022-11-01"))
+# typeof( funding_data$`Data Generation Date` )
+# typeof( as_date("2022-11-01"))
 
 ```
 
@@ -148,8 +148,6 @@ typeof( as_date("2022-11-01"))
 
 # Data dictionary based on clean dataset (minimum 4 data elements)
 
-
-__(I (Tin) am fuzzy what's needed here.  no code?  just need to describe a few variables?)__
 
 - We find all 3 tables have county names in it, which can be used as key for joining these tables.
 However, in 1 case we need to use a cleaned version of this column.  Overall, 
@@ -173,30 +171,51 @@ uniq_cause_desc
 
 chronic_desc = c( 
   "Chronic lower respiratory diseases",
-"Parkinson's disease"
-  )
-
-chronic_desc_readd_back = c( 
   "Diabetes mellitus",
  "Diseases of heart",
 "Essential hypertension and hypertensive renal disease",
-"Chronic liver disease and cirrhosis"
-)
+"Chronic liver disease and cirrhosis",
+"Parkinson's disease"
+  )
 
 
 # task detail:
 # a total count of occurrences attributed to known chronic health conditions by county, circa 2014-2020 (you may encounter missing values here, it's understood that replacing NAs with 0 is appropriate). Once the mortality data is summarized at the county level, you will join your dataframe with the county demographic data from above.
 
-table_1 = mortality_data %>% 
-  filter( Cause_Desc %in% chronic_desc ) #%>%
-  
-table_2 = mortality_data %>% 
+## below produce a table for the average case count in 2014-2020
+## grouped by county
+## and sorted in descending order by aggregate cases
+## however, more populous county will have more cases
+## this may not be good criteria for later steps of the project
+## at least not by itself, 
+## perhaps if we have way to select by rural county...
+## but this table should satisfy the requirement for Milestone 3
+# ++ check, were NA fixed to 0 in data load?
+chronic_table = mortality_data %>% 
+  filter( Cause_Desc %in% chronic_desc ) %>%
   filter( Strata == "Total Population") %>%
-  group_by( County, Cause_Desc ) %>%
+  group_by( County, Cause_Desc, Year ) %>%
   summarize( avg_count = mean(Count), 
-             County, Cause )
+             County, Cause, Strata, Geography_Type ) %>%
+  filter(  Geography_Type == "Occurrence" ) %>%
+  select( -Geography_Type ) %>%
+  filter(  Year==2014 ) %>%
+  data.frame() %>%                                 # "flatten" the group_by hierarchy
+  select( County, Cause_Desc, avg_count ) %>%
+  pivot_wider( names_from="Cause_Desc", values_from="avg_count" ) %>%   # average case count 2014-2020
+  mutate( total_chronic_cases = 
+              `Chronic lower respiratory diseases` +
+              `Diabetes mellitus` +
+              `Diseases of heart` +
+              `Essential hypertension and hypertensive renal disease` +
+              `Chronic liver disease and cirrhosis` +
+              `Parkinson's disease`            ) %>%
+  arrange( desc( total_chronic_cases ) )
 
-table_1
+
+
+# tmp Sn50
+table_1 = chronic_table
 
 ```
 
