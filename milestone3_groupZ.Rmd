@@ -165,22 +165,26 @@ county name is a character data field contained in :
 
 ```{r desc_stat}
 
-
+# development aid only, not needed in final presentation
 uniq_cause_desc = mortality_data %>% pull(Cause_Desc) %>% unique()
-uniq_cause_desc
+#uniq_cause_desc
 
 chronic_desc = c( 
   "Chronic lower respiratory diseases",
   "Diabetes mellitus",
- "Diseases of heart",
-"Essential hypertension and hypertensive renal disease",
-"Chronic liver disease and cirrhosis",
-"Parkinson's disease"
+  "Diseases of heart",
+  "Essential hypertension and hypertensive renal disease",
+  "Chronic liver disease and cirrhosis",
+  "Parkinson's disease"
   )
 
 
 # task detail:
-# a total count of occurrences attributed to known chronic health conditions by county, circa 2014-2020 (you may encounter missing values here, it's understood that replacing NAs with 0 is appropriate). Once the mortality data is summarized at the county level, you will join your dataframe with the county demographic data from above.
+# a total count of occurrences attributed to known chronic health conditions by county, 
+# circa 2014-2020 (you may encounter missing values here, 
+# it's understood that replacing NAs with 0 is appropriate). 
+# Once the mortality data is summarized at the county level, 
+# you will join your dataframe with the county demographic data from above.
 
 ## below produce a table for the average case count in 2014-2020
 ## grouped by county
@@ -197,25 +201,32 @@ chronic_table = mortality_data %>%
   group_by( County, Cause_Desc, Year ) %>%
   summarize( avg_count = mean(Count), 
              County, Cause, Strata, Geography_Type ) %>%
-  filter(  Geography_Type == "Occurrence" ) %>%
-  select( -Geography_Type ) %>%
-  filter(  Year==2014 ) %>%
-  data.frame() %>%                                 # "flatten" the group_by hierarchy
+  filter(  Geography_Type == "Occurrence" ) %>%  
+  select( -Geography_Type ) %>% # Gro type has been absorbed by group_by, thus no  needed
+  filter(  Year==2014 ) %>% # all year have same data after group_by, just pick 1
+  data.frame() %>%                            # "flatten" the group_by hierarchy
   select( County, Cause_Desc, avg_count ) %>%
-  pivot_wider( names_from="Cause_Desc", values_from="avg_count" ) %>%   # average case count 2014-2020
-  mutate( total_chronic_cases = 
+  pivot_wider( names_from="Cause_Desc", 
+               values_from="avg_count" ) %>%  # avg(case count) 2014-2020
+  mutate( `Total chronic cases` = 
               `Chronic lower respiratory diseases` +
               `Diabetes mellitus` +
               `Diseases of heart` +
               `Essential hypertension and hypertensive renal disease` +
               `Chronic liver disease and cirrhosis` +
               `Parkinson's disease`            ) %>%
-  arrange( desc( total_chronic_cases ) )
+  arrange( desc( `Total chronic cases` ) )
+
+# Need to add caption, 
+# ++ is it per 1000 population?
+
+
+chronic_table %>% head(10)
 
 
 
 # tmp Sn50
-table_1 = chronic_table
+# table_1 = chronic_table
 
 ```
 
