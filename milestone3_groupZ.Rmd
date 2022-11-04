@@ -1,8 +1,8 @@
 ---
-title: 'PHW251 Fall 2022 Project Milestone § 3'
-author:   "Aubrey Robinson, Elizabeth Guzman, Tin Ho (Group Z)"
-date:     "Due: 2022-11-07"
-output: pdf_document
+title:    'PHW251 Fall 2022 Project Milestone § 3'
+author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho (Group Z)'
+date:     'Due: 2022-11-07'
+output:   pdf_document
 ---
 
 # Project and Milestone overview
@@ -10,23 +10,27 @@ output: pdf_document
 [Pasted to group's gdoc:](https://docs.google.com/document/d/1u4-f0KCUB0QGxWI1VVgfEgEaTmQbt-Jk1uIgWP-0VYk/edit#)
 
 
-# Loading R libraries
+# R setup and load libraries
 
-(R code in Rmd, not shown in PDF)
+(this code block omitted for brevity)
 
-++FIXME++ need to find way to skip the warning messages as well 
-
-```{r load-lib, echo=FALSE}
+```{r load-lib, include=FALSE, echo=FALSE}
 library(tidyverse)
 library(dplyr)
+library(kableExtra)
+
+# omit warning messages from library load
+# https://stackoverflow.com/questions/45399587/how-to-remove-warning-messages-in-r-markdown-document
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
 
 ```
 
 ## Loading data
 
-(R code in Rmd, not shown in PDF, this code block from Milestone 2)
+(this code block currently is all from Milestone 2)
 
-```{r load-data, echo=FALSE}
+```{r load-data, echo=FALSE, include=FALSE}
 
 #   - Utilize function arguments to control relevant components 
 #     (i.e. change column types, column names, missing values, etc.)
@@ -212,35 +216,8 @@ county name is a character data field contained in :
 
 # One or more tables with descriptive statistics for 4 data element
 
-
-
-fix chronic list per Ed
-https://edstem.org/us/courses/25507/discussion/2060979
-out:
- [1] "All causes (total)"                                   
- [6] "Assault (homicide)"                                   
- [9] "Accidents (unintentional injuries)"                   
-[15] "Intentional self-harm (suicide)"   
-[13] "Influenza and pneumonia"                              
- 
-
-in
- [4] "Chronic lower respiratory diseases"                   
- [5] "Diabetes mellitus"                                    
- [7] "Diseases of heart"                                    
- [8] "Essential hypertension and hypertensive renal disease"
-[10] "Chronic liver disease and cirrhosis"                  
-[12] "Parkinson's disease"                                  
-
-add:
- [2] "Alzheimer's disease"                                  
- [3] "Malignant neoplasms"                                  
-[11] "Nephritis, nephrotic syndrome and nephrosis"          
-[14] "Cerebrovascular diseases"                             
-
-
-I ended up removing: "all cause", "assault", "accidents", "influenza" and "self-harm"
-I am also curious if this was the correct classification.
+++ write up tbd
+++ kable table still not formatted great, feel free to fiddle and improve on!
 
 
 ```{r desc_stat, echo=FALSE}
@@ -248,12 +225,11 @@ I am also curious if this was the correct classification.
 # development aid only, not needed in final presentation
 #--uniq_cause_desc = mortality_data %>% pull(Cause_Desc) %>% unique()
 #--uniq_cause_code = mortality_data %>% pull(Cause)      %>% unique()
-uniq_cause = chronic_mortality_data %>% pull( Cause, Cause_Desc ) %>% unique()
+#--uniq_cause = chronic_mortality_data %>% pull( Cause, Cause_Desc ) %>% unique()
 
-#uniq_cause_desc
-#uniq_cause_code #  [1] "ALL" "ALZ" "CAN" "CLD" "DIA" "HOM" "HTD" "HYP" "INJ" "LIV" "NEP" "PAR" "PNF" "STK" "SUI"
-
-uniq_cause # "ALZ" "CAN" "CLD" "DIA" "HTD" "HYP" "LIV" "NEP" "PAR" "STK"
+#--uniq_cause_desc
+#--uniq_cause_code
+#--uniq_cause # "ALZ" "CAN" "CLD" "DIA" "HTD" "HYP" "LIV" "NEP" "PAR" "STK"
 
 
 ## DRAFT
@@ -294,7 +270,14 @@ chronic_table = chronic_mortality_data %>%
 # Need to add caption, 
 # ++ is it per 1000 population?
 
-chronic_table %>% head(8)
+#--chronic_table %>% head(8)
+
+kable( chronic_table,
+       booktabs=T,
+       digits=c(0,0,0,0,0,0,0,0,0,0,0,2),
+       format.args=list(big.mark=',')
+       )
+
 
 ```
 
