@@ -115,6 +115,9 @@ which seems to agree with CDC definition as well
   "Nephritis, nephrotic syndrome and nephrosis",
   "Cerebrovascular diseases",
   "Parkinson's disease"
+  
+We also need to review the most recent HCAI funding for projects in closure in 
+each county. Below, is the funding_data subsetted for projects closed in August 2022
 
 
 ```{r subset_data}
@@ -142,6 +145,15 @@ num_rows_after_filter = chronic_mortality_data %>% tally
 num_rows_filtered = num_rows_befor_filter - num_rows_after_filter
 num_rows_filtered
 
+funding_data <- funding_data %>%
+  group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%
+  filter(`OSHPD Project Status` == "In Closure") %>%
+  filter(`Data Generation Date` == "2022-08-11")
+  
+
+
+demographics_data <- demographics_data %>%
+  select(id, name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ)
 
 ```
 And we find that we remove 58,000+ rows of data that we don't need.
@@ -171,6 +183,10 @@ demographics_data = demographics_data %>%
 
 
 ```
+
+
+
+
 \newpage 
 
 
@@ -181,8 +197,7 @@ demographics_data = demographics_data %>%
 In the funding_data table, County is coded like "19 - Los Angeles", "01 - Alameda".
 We need county name by itself for later table join process, 
 thus we need to "clean out" the id portion in this data field.
-We store this cleaned data in a new column called
-county_name.
+We store this cleaned data in a new column called County.
 
 We note that the county code is prefixed with 0 when they are single digits,
 thus it is always the first 5 chars that need to be stripped out.
@@ -190,7 +205,9 @@ thus it is always the first 5 chars that need to be stripped out.
 ```{r clean_vars}
 
 funding_data = funding_data %>%
-  mutate( county_name = str_sub( County, 6 ))
+  mutate( county_name = str_sub( County, 6 )) %>%
+  subset(select = -c(County)) %>%
+  rename(County = county_name)
 
 
 #  ++ Is the data field coded as R's date data structure?
@@ -198,6 +215,7 @@ funding_data = funding_data %>%
 # typeof( as_date("2022-11-01"))
 
 ```
+
 
 \newpage 
 
@@ -208,8 +226,19 @@ funding_data = funding_data %>%
 However, in 1 case we need to use a cleaned version of this column.  Overall, 
 county name is a character data field contained in :
   - demographics_data  Name
-  - funding_data       county_name 
+  - funding_data       County
   - mortality_data     County
+  
+  
+# Joining Table 
+
+```{r}
+demographics_chronic <- left_join(demographics_data, chronic_mortality_data, 
+                                  by = c("name" = "County"))
+
+
+```
+
 
 
 \newpage 
