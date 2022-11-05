@@ -283,5 +283,4 @@ kable( chronic_table,
 
 \newpage 
 
-Seeing if I can pull?
 
