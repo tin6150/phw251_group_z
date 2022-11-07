@@ -305,7 +305,7 @@ Cause_Desc= character, Names of Chronic Diseases people in counties suffer from
 ## "plan to summarize a total count of occurrences"
 ## does this means ignore Geography_Type == "Residence" ?
 
-
+#tried adding column to show whether county wasrural or not, but couldn't figure it outrural_not_rural<-demographics_data %>% select(c(name, rural_class)) %>% rename(County=name)
 chronic_table = chronic_mortality_data %>% 
   filter( Geography_Type == "Occurrence" ) %>%
   select( -Geography_Type ) %>% # Geo type restricted to "Occurrence"
@@ -320,8 +320,7 @@ chronic_table = chronic_mortality_data %>%
                values_from="avg_count" ) %>%  # avg(case count) 2014-2020
   mutate( `Sum of means chronic cases` = 
             ALZ + CAN + CLD + DIA + HTD + HYP + LIV + NEP + PAR + STK ) %>%
-  arrange( desc( `Sum of means chronic cases` ) )
-
+  arrange( desc( `Sum of means chronic cases` ) ) 
 
 
 # Need to add caption, 
