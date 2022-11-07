@@ -227,11 +227,13 @@ funding_data = funding_data %>%
 #  ++ Is the data field coded as R's date data structure?
 # typeof( funding_data$`Data Generation Date` )
 # typeof( as_date("2022-11-01"))
-# I believe so
 
 ```
- This second cleaning is to make our 3 data sets match for future joining
  
+removed decimal point from numeric cost column in funding data so it would look better
+```{r}
+funding_data_new<- funding_data$Numeric_Cost<-round(funding_data$Numeric_Cost,3)
+```
 
 
 \newpage 
