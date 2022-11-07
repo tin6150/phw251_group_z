@@ -28,12 +28,9 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ## Loading data
 
-(this code block currently is all from Milestone 2)
+(Code block omitted for brevity, mostly code from Milestone 2)
 
 ```{r load-data, echo=FALSE, include=FALSE}
-
-#   - Utilize function arguments to control relevant components 
-#     (i.e. change column types, column names, missing values, etc.)
 
 demographics_path = 'data/ca_county_demographics.csv'
 demographics_data = read_csv( demographics_path, 
@@ -43,24 +40,17 @@ demographics_data = read_csv( demographics_path,
 # rest of the columns have reasonable names, so left them as is.
 demographics_data = rename( demographics_data, id="...1")
 
-# View(demographics_data)
-
 # Loading Mortality Data 
-
 mortality_path <- 'data/ca_county_mortality.csv'
 mortality_data_raw <- read_csv(mortality_path, 
                            na= c("", "NA", "-"),
                            show_col_types=F)
 
-
-mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
-
-# View(mortality_data)
 # There are NA values in mortality_data, so we need to replace NA w/ 0
+mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
  
 
 # Loading HCAI funding Data 
-
 funding_path = 'data/hcai_healthcare_construction.csv'
 funding_data <- read_csv(  funding_path, 
                            na= c("", "NA", "-"),
@@ -143,11 +133,9 @@ num_rows_after_filter = chronic_mortality_data %>% tally
 num_rows_filtered = num_rows_befor_filter - num_rows_after_filter
 num_rows_filtered
 
-
-
 ```
 And we find that we remove 58,000+ rows of data that we don't need.
-\newpage
+
 
 ## Subsetting Funding and Demographics Data
 
@@ -156,20 +144,17 @@ each county. Below, is the funding_data subsetted for projects closed in August 
 
 Other subsetting maybe needed, and we will develop them as we make progress on this project.
 ```{r}
-funding_data <- funding_data %>%
+funding_data_full = funding_data
+funding_data <- funding_data_full %>%
   group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%
   filter(`OSHPD Project Status` == "In Closure") %>%
-  filter(`Data Generation Date` == "2022-08-11")
+  filter(`Data Generation Date` == as_date("2022-08-11") )
 
-demographics_data <- demographics_data %>%
+demographics_data_subset <- demographics_data %>%
   select(name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ)
 ```
   
 
-
-
-
-  
 \newpage 
 
 # Create New Variables
@@ -186,7 +171,7 @@ The following code block creates a new variable rent_own_ratio
 ```{r create_new_vars}
 
 ## Renters vs Homeowners Ratio
-demographics_data = demographics_data %>%
+demographics_data_subset = demographics_data_subset %>%
   mutate( rent_own_ratio = renter_occ / owner_occ )
 
 
@@ -194,10 +179,14 @@ demographics_data = demographics_data %>%
 
 ## Rural Areas
 
-For the second new variable, we are categorizing one of our existing variables as either "rural" or "not rural". We are using the National Rural Development Partnership's definition which counts an area with less than 20 people per square mile rural. 
+For the second new variable, we are categorizing one of our existing variables as 
+either "rural" or "not rural". We are using the National Rural Development Partnership's 
+definition which counts an area with less than 20 people per square mile rural. 
+
 ```{r}
-demographics_data<- mutate(demographics_data, rural_class=if_else(pop12_sqmi < 20, 
-                                                                  "rural", "not rural", missing=NULL))
+demographics_data_subset <- 
+  mutate(demographics_data_subset, 
+         rural_class=if_else( pop12_sqmi < 20, "rural", "not rural", missing=NULL))
 ```
 
 
@@ -223,16 +212,30 @@ funding_data = funding_data %>%
   subset(select = -c(County)) %>%
   rename(County = county_name)
 
-
-#  ++ Is the data field coded as R's date data structure?
-# typeof( funding_data$`Data Generation Date` )
-# typeof( as_date("2022-11-01"))
-
 ```
  
-rounding rent_own_ratio
+Various columns have number formats that are unsightly, 
+using round() to create easier to read numbers.
+
 ```{r}
-funding_data$Numeric_Cost=round(funding_data$Numeric_Cost)
+funding_data$Numeric_Cost = round( funding_data$Numeric_Cost )
+
+demographics_data_subset$rent_own_ratio = round( 
+  demographics_data_subset$rent_own_ratio, 4   )
+
+```
+
+## Joining Table 
+
+Now we join the tables
+democraphics_data_subset with chronic_mortality_data 
+by their county names to create a new table called
+deomographics_chronic
+
+```{r}
+demographics_chronic <- left_join(demographics_data_subset, 
+                                  chronic_mortality_data, 
+                                  by = c("name" = "County") )
 
 ```
 
@@ -248,15 +251,10 @@ county name is a character data field contained in :
   - demographics_data  Name
   - funding_data       County
   - mortality_data     County
-  
-# Joining Table 
+and this is the variable used as key to join tables.  
 
-```{r}
-demographics_chronic <- left_join(demographics_data, chronic_mortality_data, 
-                                  by = c("name" = "County"))
 
-```
-# DATA DICTIONARY exerpt
+## Other variables of interest
 
 name = character, Name of County
 
@@ -273,8 +271,28 @@ Cause_Desc= character, Names of Chronic Diseases people in counties suffer from
 
 # One or more tables with descriptive statistics for 4 data element
 
+First, we create a table for rural counties and their 
+home rent:own ratio calculated previously,
+sorted by decreasing home ownership ratio.
+
+
+```{r desc_stat, echo=FALSE}
+
+#tried adding column to show whether county was rural or not, but couldn't figure it out
+rural_not_rural <- demographics_data_subset %>% 
+  select( name, rural_class, rent_own_ratio ) %>% 
+  filter( rural_class == "rural") %>%
+  rename(County=name) %>%
+  arrange( desc( rent_own_ratio ) )
+
+rural_not_rural #%>% head()
+
+```
+
+
 ++ write up tbd
 ++ kable table still not formatted great, feel free to fiddle and improve on!
+
 
 
 ```{r desc_stat, echo=FALSE}
@@ -305,7 +323,8 @@ Cause_Desc= character, Names of Chronic Diseases people in counties suffer from
 ## "plan to summarize a total count of occurrences"
 ## does this means ignore Geography_Type == "Residence" ?
 
-#tried adding column to show whether county wasrural or not, but couldn't figure it outrural_not_rural<-demographics_data %>% select(c(name, rural_class)) %>% rename(County=name)
+
+
 chronic_table = chronic_mortality_data %>% 
   filter( Geography_Type == "Occurrence" ) %>%
   select( -Geography_Type ) %>% # Geo type restricted to "Occurrence"
@@ -331,7 +350,8 @@ chronic_table = chronic_mortality_data %>%
 kable( chronic_table,
        booktabs=T,
        digits=c(0,0,0,0,0,0,0,0,0,0,0,2),
-       format.args=list(big.mark=','), caption = "Number of People Suffering from Each Chronic Illness Type by County", 
+       format.args=list(big.mark=','), 
+       caption = "Number of People Suffering from Each Chronic Illness Type by County", 
        )
 #idk how to make font size bigger for caption
 
