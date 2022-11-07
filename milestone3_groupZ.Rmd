@@ -115,9 +115,7 @@ which seems to agree with CDC definition as well
   "Nephritis, nephrotic syndrome and nephrosis",
   "Cerebrovascular diseases",
   "Parkinson's disease"
-  
-We also need to review the most recent HCAI funding for projects in closure in 
-each county. Below, is the funding_data subsetted for projects closed in August 2022
+
 
 
 ```{r subset_data}
@@ -145,20 +143,30 @@ num_rows_after_filter = chronic_mortality_data %>% tally
 num_rows_filtered = num_rows_befor_filter - num_rows_after_filter
 num_rows_filtered
 
+
+
+```
+And we find that we remove 58,000+ rows of data that we don't need.
+\newpage
+
+## Subsetting Funding and Demographics Data
+
+We also need to review the most recent HCAI funding for projects in closure in 
+each county. Below, is the funding_data subsetted for projects closed in August 2022
+
+Other subsetting maybe needed, and we will develop them as we make progress on this project.
+```{r}
 funding_data <- funding_data %>%
   group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%
   filter(`OSHPD Project Status` == "In Closure") %>%
   filter(`Data Generation Date` == "2022-08-11")
+
+demographics_data <- demographics_data %>%
+  select(name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ)
+```
   
 
 
-demographics_data <- demographics_data %>%
-  select(id, name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ)
-
-```
-And we find that we remove 58,000+ rows of data that we don't need.
-
-Other subsetting maybe needed, and we will develop them as we make progress on this project.
 
 
   
@@ -219,8 +227,11 @@ funding_data = funding_data %>%
 #  ++ Is the data field coded as R's date data structure?
 # typeof( funding_data$`Data Generation Date` )
 # typeof( as_date("2022-11-01"))
+# I believe so
 
 ```
+ This second cleaning is to make our 3 data sets match for future joining
+ 
 
 
 \newpage 
