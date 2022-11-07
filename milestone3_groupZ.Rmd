@@ -304,7 +304,8 @@ Second, we produce a table for the total case count in 2014-2020
 for the rural counties.
 
 The "Sum" column is the total cases over all the chronic diseases for each county,
-it provides rough yard stick of the aggregate cases each county oversees.
+and the "Mean" is the sum divided over the 7 years span.
+Together they provides rough yard stick of chronic cases each county oversees.
 
 Note that there are many zeros in this table, 
 they may not truly represent no cases, 
@@ -316,7 +317,7 @@ but more likely because of missing data.
 # Further join demographics_chronic with rural_counties
 demographics_chronic_rural = inner_join( demographics_chronic,
                                          rural_counties,
-                                         by = c( "County" = "name" ) )
+                                         by = "County" )
 
 ## prompt says:
 ## "plan to summarize a total count of occurrences"
@@ -331,12 +332,14 @@ chronic_table = demographics_chronic_rural %>%
              County, Cause, Cause_Desc, Year ) %>%
   filter(  Year==2014 ) %>% # all year have same data after group_by, just pick 1
   data.frame() %>%          # "flatten" the group_by hierarchy
-  select( County, Cause, sum_count,  ) %>%
+  select( County, Cause, sum_count ) %>%
   pivot_wider( names_from="Cause", 
                values_from="sum_count" ) %>%  # sum(case count) 2014-2020
   mutate( `Sum of chronic cases` = 
             ALZ + CAN + CLD + DIA + HTD + HYP + LIV + NEP + PAR + STK ) %>%
-  rename( `Sum` = `Sum of chronic cases` ) %>%
+  mutate( `Mean Case Per Year` = `Sum of chronic cases` / 7           ) %>%
+  rename( `Sum`  = `Sum of chronic cases`,
+          `Mean` = `Mean Case Per Year`   ) %>%
   arrange( desc( `Sum` ) ) 
 
 
