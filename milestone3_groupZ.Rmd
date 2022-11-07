@@ -230,13 +230,14 @@ funding_data = funding_data %>%
 
 ```
  
-removed decimal point from numeric cost column in funding data so it would look better
+rounding rent_own_ratio
 ```{r}
-funding_data_new<- funding_data$Numeric_Cost<-round(funding_data$Numeric_Cost,3)
+funding_data$Numeric_Cost=round(funding_data$Numeric_Cost)
+
 ```
 
+\newpage
 
-\newpage 
 
 # Data dictionary based on clean dataset (minimum 4 data elements)
 
@@ -248,16 +249,24 @@ county name is a character data field contained in :
   - funding_data       County
   - mortality_data     County
   
-  
 # Joining Table 
 
 ```{r}
 demographics_chronic <- left_join(demographics_data, chronic_mortality_data, 
                                   by = c("name" = "County"))
 
-
 ```
+# DATA DICTIONARY exerpt
 
+name = character, Name of County
+
+pop12_sqmi= numeric, Number of people per square mile in county
+
+med_age = numeric, Median age of people in county
+
+rent_own_ratio= numeric, The ratio of people who rent over those who own a home 
+
+Cause_Desc= character, Names of Chronic Diseases people in counties suffer from
 
 
 \newpage 
