@@ -173,7 +173,7 @@ Other subsetting maybe needed, and we will develop them as we make progress on t
     
 ## Renters vs Homeowners
 
-The following code block create a new variable rent_own_ratio
+The following code block creates a new variable rent_own_ratio
 
 ```{r create_new_vars}
 
@@ -184,7 +184,13 @@ demographics_data = demographics_data %>%
 
 ```
 
+## Rural Areas
 
+For the second new variable, we are categorizing one of our existing variables as either "rural" or "not rural". We are using the National Rural Development Partnership's definition which counts an area with less than 20 people per square mile rural. 
+```{r}
+demographics_data<- mutate(demographics_data, rural_class=if_else(pop12_sqmi < 20, 
+                                                                  "rural", "not rural", missing=NULL))
+```
 
 
 \newpage 
