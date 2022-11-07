@@ -235,7 +235,8 @@ deomographics_chronic
 ```{r}
 demographics_chronic <- left_join(demographics_data_subset, 
                                   chronic_mortality_data, 
-                                  by = c("name" = "County") )
+                                  by = c("name" = "County") ) %>%
+  rename( County=name )
 
 ```
 
@@ -278,24 +279,38 @@ sorted by decreasing home ownership ratio.
 
 ```{r desc_stat, echo=FALSE}
 
-#tried adding column to show whether county was rural or not, but couldn't figure it out
+# column to show whether county was rural or not
 rural_not_rural <- demographics_data_subset %>% 
-  select( name, rural_class, rent_own_ratio ) %>% 
-  filter( rural_class == "rural") %>%
-  rename(County=name) %>%
-  arrange( desc( rent_own_ratio ) )
+  select( name, rural_class, rent_own_ratio )  
 
-rural_not_rural #%>% head()
+rural_counties = rural_not_rural   %>%
+  filter( rural_class == "rural" ) %>%
+  arrange( desc( rent_own_ratio  ) )
+
+#rural_counties 
 
 ```
 
+Second, 
 
 ++ write up tbd
 ++ kable table still not formatted great, feel free to fiddle and improve on!
 
 
+There are many zeros in this table, they may not truly represent no cases, 
+but more likely because of missing data.
+
 
 ```{r desc_stat, echo=FALSE}
+
+# Further join demographics_chronic with rural_counties
+
+
+demographics_chronic_rural = inner_join( demographics_chronic,
+                                         rural_counties,
+                                         by = c( "County" = "name" ) )
+
+
 
 # development aid only, not needed in final presentation
 #--uniq_cause_desc = mortality_data %>% pull(Cause_Desc) %>% unique()
@@ -325,22 +340,25 @@ rural_not_rural #%>% head()
 
 
 
-chronic_table = chronic_mortality_data %>% 
-  filter( Geography_Type == "Occurrence" ) %>%
+#chronic_table = chronic_mortality_data %>%
+chronic_table = demographics_chronic_rural %>% 
+  filter(  Geography_Type == "Occurrence" ) %>%
   select( -Geography_Type ) %>% # Geo type restricted to "Occurrence"
-  filter( Strata == "Total Population") %>%
+  filter(  Strata == "Total Population") %>%
   group_by( County, Cause, Year ) %>%
   summarize( avg_count = mean(Count), 
              County, Cause, Cause_Desc ) %>%
   filter(  Year==2014 ) %>% # all year have same data after group_by, just pick 1
   data.frame() %>%                            # "flatten" the group_by hierarchy
-  select( County, Cause, avg_count ) %>%
+  select( County, Cause, avg_count,  ) %>%
   pivot_wider( names_from="Cause", 
                values_from="avg_count" ) %>%  # avg(case count) 2014-2020
   mutate( `Sum of means chronic cases` = 
             ALZ + CAN + CLD + DIA + HTD + HYP + LIV + NEP + PAR + STK ) %>%
-  arrange( desc( `Sum of means chronic cases` ) ) 
+  rename( Sum = `Sum of means chronic cases` ) %>%
+  arrange( desc( `Sum` ) ) 
 
+# Sum = "Sum of means chronic cases"
 
 # Need to add caption, 
 # ++ is it per 1000 population?
