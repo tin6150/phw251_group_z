@@ -7,7 +7,9 @@ output:   pdf_document
 
 # Project and Milestone overview
 
-[Pasted to group's gdoc:](https://docs.google.com/document/d/1u4-f0KCUB0QGxWI1VVgfEgEaTmQbt-Jk1uIgWP-0VYk/edit#)
+This is Milestone #3 of the semester-long project.
+
+[Project and Milestone overview pasted to group's gdoc as checklist](https://docs.google.com/document/d/1u4-f0KCUB0QGxWI1VVgfEgEaTmQbt-Jk1uIgWP-0VYk/edit#)
 
 
 # R setup and load libraries
@@ -17,6 +19,7 @@ output:   pdf_document
 ```{r load-lib, include=FALSE, echo=FALSE}
 library(tidyverse)
 library(dplyr)
+library(lubridate)
 library(kableExtra)
 
 # omit warning messages from library load
@@ -28,12 +31,9 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ## Loading data
 
-(this code block currently is all from Milestone 2)
+(Code block omitted for brevity, mostly code from Milestone 2)
 
 ```{r load-data, echo=FALSE, include=FALSE}
-
-#   - Utilize function arguments to control relevant components 
-#     (i.e. change column types, column names, missing values, etc.)
 
 demographics_path = 'data/ca_county_demographics.csv'
 demographics_data = read_csv( demographics_path, 
@@ -43,24 +43,17 @@ demographics_data = read_csv( demographics_path,
 # rest of the columns have reasonable names, so left them as is.
 demographics_data = rename( demographics_data, id="...1")
 
-# View(demographics_data)
-
 # Loading Mortality Data 
-
 mortality_path <- 'data/ca_county_mortality.csv'
 mortality_data_raw <- read_csv(mortality_path, 
                            na= c("", "NA", "-"),
                            show_col_types=F)
 
-
-mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
-
-# View(mortality_data)
 # There are NA values in mortality_data, so we need to replace NA w/ 0
+mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
  
 
 # Loading HCAI funding Data 
-
 funding_path = 'data/hcai_healthcare_construction.csv'
 funding_data <- read_csv(  funding_path, 
                            na= c("", "NA", "-"),
@@ -115,9 +108,7 @@ which seems to agree with CDC definition as well
   "Nephritis, nephrotic syndrome and nephrosis",
   "Cerebrovascular diseases",
   "Parkinson's disease"
-  
-We also need to review the most recent HCAI funding for projects in closure in 
-each county. Below, is the funding_data subsetted for projects closed in August 2022
+
 
 
 ```{r subset_data}
@@ -145,23 +136,28 @@ num_rows_after_filter = chronic_mortality_data %>% tally
 num_rows_filtered = num_rows_befor_filter - num_rows_after_filter
 num_rows_filtered
 
-funding_data <- funding_data %>%
-  group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%
-  filter(`OSHPD Project Status` == "In Closure") %>%
-  filter(`Data Generation Date` == "2022-08-11")
-  
-
-
-demographics_data <- demographics_data %>%
-  select(id, name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ)
-
 ```
 And we find that we remove 58,000+ rows of data that we don't need.
 
+
+## Subsetting Funding and Demographics Data
+
+We also need to review the most recent HCAI funding for projects in closure in 
+each county. Below, is the funding_data subsetted for projects closed in August 2022
+
 Other subsetting maybe needed, and we will develop them as we make progress on this project.
+```{r}
+funding_data_full = funding_data
+funding_data <- funding_data_full %>%
+  group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%
+  filter(`OSHPD Project Status` == "In Closure") %>%
+  filter(`Data Generation Date` == as_date("2022-08-11") )
 
-
+demographics_data_subset <- demographics_data %>%
+  select(name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ)
+```
   
+
 \newpage 
 
 # Create New Variables
@@ -173,18 +169,28 @@ Other subsetting maybe needed, and we will develop them as we make progress on t
     
 ## Renters vs Homeowners
 
-The following code block create a new variable rent_own_ratio
+The following code block creates a new variable rent_own_ratio
 
 ```{r create_new_vars}
 
 ## Renters vs Homeowners Ratio
-demographics_data = demographics_data %>%
+demographics_data_subset = demographics_data_subset %>%
   mutate( rent_own_ratio = renter_occ / owner_occ )
 
 
 ```
 
+## Rural Areas
 
+For the second new variable, we are categorizing one of our existing variables as 
+either "rural" or "not rural". We are using the National Rural Development Partnership's 
+definition which counts an area with less than 20 people per square mile rural. 
+
+```{r}
+demographics_data_subset <- 
+  mutate(demographics_data_subset, 
+         rural_class=if_else( pop12_sqmi < 20, "rural", "not rural", missing=NULL))
+```
 
 
 \newpage 
@@ -209,15 +215,36 @@ funding_data = funding_data %>%
   subset(select = -c(County)) %>%
   rename(County = county_name)
 
+```
+ 
+Various columns have number formats that are unsightly, 
+using round() to create easier to read numbers.
 
-#  ++ Is the data field coded as R's date data structure?
-# typeof( funding_data$`Data Generation Date` )
-# typeof( as_date("2022-11-01"))
+```{r}
+funding_data$Numeric_Cost = round( funding_data$Numeric_Cost )
+
+demographics_data_subset$rent_own_ratio = round( 
+  demographics_data_subset$rent_own_ratio, 4   )
 
 ```
 
+## Joining Table 
 
-\newpage 
+Now we join the tables
+democraphics_data_subset with chronic_mortality_data 
+by their county names to create a new table called
+deomographics_chronic
+
+```{r}
+demographics_chronic <- left_join(demographics_data_subset, 
+                                  chronic_mortality_data, 
+                                  by = c("name" = "County") ) %>%
+  rename( County=name )
+
+```
+
+\newpage
+
 
 # Data dictionary based on clean dataset (minimum 4 data elements)
 
@@ -228,88 +255,128 @@ county name is a character data field contained in :
   - demographics_data  Name
   - funding_data       County
   - mortality_data     County
-  
-  
-# Joining Table 
-
-```{r}
-demographics_chronic <- left_join(demographics_data, chronic_mortality_data, 
-                                  by = c("name" = "County"))
+and this is the variable used as key to join tables.  
 
 
-```
+## Other variables of interest
+
+name = character, Name of County
+
+pop12_sqmi= numeric, Number of people per square mile in county
+
+med_age = numeric, Median age of people in county
+
+rent_own_ratio= numeric, The ratio of people who rent over those who own a home 
+
+Cause_Desc= character, Names of Chronic Diseases people in counties suffer from
+
+\newpage
 
 
-
-\newpage 
 
 # One or more tables with descriptive statistics for 4 data element
 
-++ write up tbd
-++ kable table still not formatted great, feel free to fiddle and improve on!
+First, we create a table for rural counties and their 
+home rent:own ratio calculated previously,
+sorted by decreasing home ownership ratio.
 
 
-```{r desc_stat, echo=FALSE}
+```{r table_1, echo=FALSE}
 
-# development aid only, not needed in final presentation
-#--uniq_cause_desc = mortality_data %>% pull(Cause_Desc) %>% unique()
-#--uniq_cause_code = mortality_data %>% pull(Cause)      %>% unique()
-#--uniq_cause = chronic_mortality_data %>% pull( Cause, Cause_Desc ) %>% unique()
+# column to show whether county was rural or not
+rural_not_rural <- demographics_data_subset %>% 
+  select( name, rural_class, rent_own_ratio )  
 
-#--uniq_cause_desc
-#--uniq_cause_code
-#--uniq_cause # "ALZ" "CAN" "CLD" "DIA" "HTD" "HYP" "LIV" "NEP" "PAR" "STK"
+rural_counties = rural_not_rural   %>%
+  filter( rural_class == "rural" ) %>%
+  arrange( desc( rent_own_ratio  ) ) %>%
+  rename( `County` = name,
+          `Class`  = rural_class,
+          `Rent vs Own Ratio` = rent_own_ratio )
+
+kable( rural_counties,
+       booktabs=T,
+       caption = "Rural Counties of California and their renter to homeownership ratio" )
+
+```
+
+Second, we produce a table for the total case count in 2014-2020
+for the rural counties.
+
+The "Sum" column is the total cases over all the chronic diseases for each county,
+and the "Mean" is the sum divided over the 7 years span.
+Together they provides rough yard stick of chronic cases each county oversees.
+
+Note that there are many zeros in this table, 
+they may not truly represent no cases, 
+but more likely because of missing data.
 
 
-## DRAFT
+```{r table_2, echo=FALSE}
 
-## below produce a table for the average case count in 2014-2020
-## grouped by county
-## and sorted in descending order by aggregate cases
-## however, more populous county will have more cases
-## this may not be good criteria for later steps of the project
-## at least not by itself, 
-## perhaps if we have way to select by rural county...
-## but this table should satisfy the requirement for Milestone 3
+# Further join demographics_chronic with rural_counties
+demographics_chronic_rural = inner_join( demographics_chronic,
+                                         rural_counties,
+                                         by = "County" )
 
-
-## ++ prompt says:
+## prompt says:
 ## "plan to summarize a total count of occurrences"
-## does this means ignore Geography_Type == "Residence" ?
+## thus taking it to mean ignore Geography_Type == "Residence"
 
-
-chronic_table = chronic_mortality_data %>% 
-  filter( Geography_Type == "Occurrence" ) %>%
+chronic_table = demographics_chronic_rural %>% 
+  filter(  Geography_Type == "Occurrence" ) %>%
   select( -Geography_Type ) %>% # Geo type restricted to "Occurrence"
-  filter( Strata == "Total Population") %>%
-  group_by( County, Cause, Year ) %>%
-  summarize( avg_count = mean(Count), 
-             County, Cause, Cause_Desc ) %>%
+  filter(  Strata == "Total Population") %>%
+  group_by( County, Cause ) %>%
+  summarize( sum_count = sum(Count), 
+             County, Cause, Cause_Desc, Year ) %>%
   filter(  Year==2014 ) %>% # all year have same data after group_by, just pick 1
-  data.frame() %>%                            # "flatten" the group_by hierarchy
-  select( County, Cause, avg_count ) %>%
+  data.frame() %>%          # "flatten" the group_by hierarchy
+  select( County, Cause, sum_count ) %>%
   pivot_wider( names_from="Cause", 
-               values_from="avg_count" ) %>%  # avg(case count) 2014-2020
-  mutate( `Sum of means chronic cases` = 
+               values_from="sum_count" ) %>%  # sum(case count) 2014-2020
+  mutate( `Sum of chronic cases` = 
             ALZ + CAN + CLD + DIA + HTD + HYP + LIV + NEP + PAR + STK ) %>%
-  arrange( desc( `Sum of means chronic cases` ) )
+  mutate( `Mean Case Per Year` = `Sum of chronic cases` / 7           ) %>%
+  rename( `Sum`  = `Sum of chronic cases`,
+          `Mean` = `Mean Case Per Year`   ) %>%
+  arrange( desc( `Sum` ) ) 
 
-
-
-# Need to add caption, 
-# ++ is it per 1000 population?
-
-#--chronic_table %>% head(8)
 
 kable( chronic_table,
        booktabs=T,
        digits=c(0,0,0,0,0,0,0,0,0,0,0,2),
-       format.args=list(big.mark=',')
+       format.args=list(big.mark=','), 
+       caption = "Number of People Suffering from Each Chronic Illness Type by County, 2014-2020", 
        )
-
 
 ```
 
+```{r spot check result, include=FALSE}
+
+# code development use only
+# spot checking to be sure created table correctly
+
+demographics_chronic_rural %>% 
+#mortality_data %>%
+  filter( County == "Siskiyou" ) %>%
+  filter( Cause == "ALZ" )
+
+```
+
+```{r legend, echo=FALSE}
+
+legend = chronic_mortality_data %>% 
+  select( Cause, Cause_Desc ) %>%
+  unique( ) %>% 
+  arrange( Cause ) %>% 
+  rename( `Cause Description` = `Cause_Desc` )
+  
+kable( legend,
+       booktabs = T,
+       caption  = "Disease Code Legend" )
+
+```
 \newpage 
 
 
