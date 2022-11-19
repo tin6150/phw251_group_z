@@ -1,0 +1,170 @@
+---
+title: "milestone4_groupZ"
+output: pdf_document
+date: '2022-11-19'
+---
+
+# Project and Milestone overview
+
+[Pasted to group's gdoc:](https://docs.google.com/document/d/1u4-f0KCUB0QGxWI1VVgfEgEaTmQbt-Jk1uIgWP-0VYk/edit#)
+
+
+# R setup and load libraries
+
+(this code block omitted for brevity)
+
+```{r load-lib, include=FALSE, echo=FALSE}
+library(tidyverse)
+library(dplyr)
+library(kableExtra)
+
+# omit warning messages from library load
+# https://stackoverflow.com/questions/45399587/how-to-remove-warning-messages-in-r-markdown-document
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+```
+
+## Loading & Cleaning data from Milestone 3
+
+**Suggestions from Lauren: 
+  -confirm we're not double counting deaths in mortality data 
+  -summarize mortality rates by county and use rates instead of counts before joining 
+
+```{r load-data, echo=FALSE, include=FALSE}
+
+#   - Utilize function arguments to control relevant components 
+#     (i.e. change column types, column names, missing values, etc.)
+
+demographics_path = 'data/ca_county_demographics.csv'
+demographics_data = read_csv( demographics_path, 
+                              na = c("", "NA", "-"), 
+                              show_col_types=F )
+# the first column contains id number, but it is unamed, so renaming it
+# rest of the columns have reasonable names, so left them as is.
+demographics_data = rename( demographics_data, id="...1")
+
+# View(demographics_data)
+
+# Loading Mortality Data 
+
+mortality_path <- 'data/ca_county_mortality.csv'
+mortality_data_raw <- read_csv(mortality_path, 
+                           na= c("", "NA", "-"),
+                           show_col_types=F)
+
+
+mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
+
+# View(mortality_data)
+# There are NA values in mortality_data, so we need to replace NA w/ 0
+ 
+
+# Loading HCAI funding Data 
+
+funding_path = 'data/hcai_healthcare_construction.csv'
+funding_data <- read_csv(  funding_path, 
+                           na= c("", "NA", "-"),
+                           show_col_types=F       )
+
+# finding where in the data frame there is an 'na'
+# https://www.geeksforgeeks.org/find-columns-and-rows-with-na-in-r-dataframe/
+funding_data_no_CtyColl = select(funding_data, -c("Collection of Counties"))
+which(is.na(funding_data_no_CtyColl), arr.ind=T)
+# and we find that only the column "Collection of Counties" has 'na'
+# we will leave this for now since it may just be a colloquial reference
+# unimportant for our data analysis.
+# no replacement for na with 0 will be done on this data frame.
+
+
+# the Costs column has human data, eg $50,890,315.00
+# and we need to strip the dollar sign, the commas, 
+# and convert them to numbers.  
+# ref: https://stackoverflow.com/questions/31944103/convert-currency-with-commas-into-numeric
+# we create a new column for this called "Numeric_Cost", 
+# but could have potentially done an in-place replacement
+funding_data = funding_data %>% 
+  mutate(Numeric_Cost = as.numeric(
+    gsub( '[$,]', '', funding_data[["Total Costs of OSHPD Projects"]] ) 
+  ))
+
+```
+
+```{r subset_data}
+
+chronic_desc = c( 
+  "Chronic lower respiratory diseases",
+  "Diabetes mellitus",
+  "Diseases of heart",
+  "Essential hypertension and hypertensive renal disease",
+  "Chronic liver disease and cirrhosis",
+  "Alzheimer's disease",
+  "Malignant neoplasms",
+  "Nephritis, nephrotic syndrome and nephrosis",
+  "Cerebrovascular diseases",
+  "Parkinson's disease"
+  )
+
+
+chronic_mortality_data = mortality_data %>% 
+  filter( Cause_Desc %in% chronic_desc )
+
+num_rows_befor_filter = mortality_data %>% tally
+num_rows_after_filter = chronic_mortality_data %>% tally
+
+num_rows_filtered = num_rows_befor_filter - num_rows_after_filter
+num_rows_filtered
+
+funding_data <- funding_data %>%
+  group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%
+  filter(`OSHPD Project Status` == "In Closure") %>%
+  filter(`Data Generation Date` == "2022-08-11")
+  
+
+
+demographics_data <- demographics_data %>%
+  select(id, name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ)
+
+```
+
+```{r create_new_vars}
+
+## Renters vs Homeowners Ratio
+demographics_data = demographics_data %>%
+  mutate( rent_own_ratio = renter_occ / owner_occ )
+
+funding_data = funding_data %>%
+  mutate( county_name = str_sub( County, 6 )) %>%
+  subset(select = -c(County)) %>%
+  rename(County = county_name)
+
+```
+
+\newpage 
+
+#Visualizations
+
+Data needed to make decision:
+-which counties share all 3 attributes: low pop(rural), high median age, 
+& high proportion of renters vs homeowners
+-which 5 counties have highest mortality rates due to chronic illness
+-what counties have received little to no funding recently? ---not quite sure 
+about this one
+
+#Print Quality Table
+
+```{r}
+
+```
+
+#Print Quality Plot or Chart
+
+```{r}
+
+```
+
+#Print Quality Table, Plot or Chart
+
+```{r}
+
+```
+
