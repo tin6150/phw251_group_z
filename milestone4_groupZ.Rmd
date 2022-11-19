@@ -31,21 +31,8 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
   -confirm we're not double counting deaths in mortality data 
   -summarize mortality rates by county and use rates instead of counts before joining 
 
-```{r load-data, echo=FALSE, include=FALSE}
 
-# Load demographics data
-
-demographics_path = 'data/ca_county_demographics.csv'
-demographics_data = read_csv( demographics_path, 
-                              na = c("", "NA", "-"), 
-                              show_col_types=F )
-
-# the first column contains id number, but it is unamed, so renaming it
-# rest of the columns have reasonable names, so left them as is.
-demographics_data = rename( demographics_data, id="...1")
-
-# View(demographics_data)
-
+```{r massage mortality data, echo=FALSE, include=FALSE}
 
 # Loading Mortality Data 
 
@@ -58,7 +45,37 @@ mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
 
 # View(mortality_data)
 # There are NA values in mortality_data, so we need to replace NA w/ 0
- 
+
+
+# subset mortality data for chronic conditions only
+
+chronic_desc = c( 
+  "Chronic lower respiratory diseases",
+  "Diabetes mellitus",
+  "Diseases of heart",
+  "Essential hypertension and hypertensive renal disease",
+  "Chronic liver disease and cirrhosis",
+  "Alzheimer's disease",
+  "Malignant neoplasms",
+  "Nephritis, nephrotic syndrome and nephrosis",
+  "Cerebrovascular diseases",
+  "Parkinson's disease"
+  )
+
+chronic_mortality_data = mortality_data %>% 
+  filter( Cause_Desc %in% chronic_desc )
+
+num_rows_befor_filter = mortality_data %>% tally
+num_rows_after_filter = chronic_mortality_data %>% tally
+#num_rows_after_filter
+
+num_rows_filtered = num_rows_befor_filter - num_rows_after_filter
+num_rows_filtered
+```
+
+```{r massage funding data, echo=FALSE, include=FALSE}
+
+
 
 # Loading HCAI funding Data 
 
@@ -90,37 +107,6 @@ funding_data = funding_data %>%
     gsub( '[$,]', '', funding_data[["Total Costs of OSHPD Projects"]] ) 
   ))
 
-```
-
-```{r massage mortality data, echo=FALSE, include=FALSE}
-
-# subset mortality data for chronic conditions only
-
-chronic_desc = c( 
-  "Chronic lower respiratory diseases",
-  "Diabetes mellitus",
-  "Diseases of heart",
-  "Essential hypertension and hypertensive renal disease",
-  "Chronic liver disease and cirrhosis",
-  "Alzheimer's disease",
-  "Malignant neoplasms",
-  "Nephritis, nephrotic syndrome and nephrosis",
-  "Cerebrovascular diseases",
-  "Parkinson's disease"
-  )
-
-chronic_mortality_data = mortality_data %>% 
-  filter( Cause_Desc %in% chronic_desc )
-
-num_rows_befor_filter = mortality_data %>% tally
-num_rows_after_filter = chronic_mortality_data %>% tally
-#num_rows_after_filter
-
-num_rows_filtered = num_rows_befor_filter - num_rows_after_filter
-num_rows_filtered
-```
-
-```{r massage funding data, echo=FALSE, include=FALSE}
 
 # subset HCAI funding data for those "In Closure" state
 
@@ -138,6 +124,21 @@ funding_data = funding_data %>%
 
 
 ```{r massage demographics data, echo=FALSE, include=FALSE}
+
+
+# Load demographics data
+
+demographics_path = 'data/ca_county_demographics.csv'
+demographics_data = read_csv( demographics_path, 
+                              na = c("", "NA", "-"), 
+                              show_col_types=F )
+
+# the first column contains id number, but it is unamed, so renaming it
+# rest of the columns have reasonable names, so left them as is.
+demographics_data = rename( demographics_data, id="...1")
+
+# View(demographics_data)
+
 
 # massaging demographics data
 
@@ -168,6 +169,9 @@ rural_counties = rural_not_rural   %>%
 
 ```
 ```{r tmp}
+
+## decide if need to output any of these tables
+## likely need to refine further 
 rural_counties %>% head( 6 )
 
 ```
@@ -175,6 +179,7 @@ rural_counties %>% head( 6 )
 ```{r join tables, echo=FALSE, include=FALSE}
 
 
+## NOTE: should use the chronic_mortality subset.
 
 ```
 
