@@ -84,9 +84,22 @@ funding_data <- read_csv(  funding_path,
                            na= c("", "NA", "-"),
                            show_col_types=F       )
 
+CtyColl = select(funding_data, c("Collection of Counties")) %>%
+  unique()
+
+CtyColl 
+## there are 4 collection of counties, 
+## there aren't likely needed for data eval,
+## but add lots of NA, so dropping them
+#1 Bay Area Counties           
+#2 NA                          
+#3 Greater Sacramento Counties 
+#4 Greater Los Angeles Counties
+
 # finding where in the data frame there is an 'na'
 # https://www.geeksforgeeks.org/find-columns-and-rows-with-na-in-r-dataframe/
-funding_data_no_CtyColl = select(funding_data, -c("Collection of Counties"))
+## funding_data_no_CtyColl = select(funding_data, -c("Collection of Counties"))
+funding_data = select(funding_data, -c("Collection of Counties"))
 
 ## which(is.na(funding_data_no_CtyColl), arr.ind=T)
 # above returns 0 rows, ie
@@ -94,6 +107,7 @@ funding_data_no_CtyColl = select(funding_data, -c("Collection of Counties"))
 # we will leave this for now since it may just be a colloquial reference
 # unimportant for our data analysis.
 # no replacement for na with 0 will be done on this data frame.
+
 
 
 # the Costs column has human data, eg $50,890,315.00
@@ -110,8 +124,8 @@ funding_data = funding_data %>%
 
 # subset HCAI funding data for those "In Closure" state
 
-funding_data <- funding_data %>%
-  group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%
+problem_funding_data <- funding_data %>%
+  #group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%
   filter(`OSHPD Project Status` == "In Closure") %>%
   filter(`Data Generation Date` == "2022-08-11")
 
