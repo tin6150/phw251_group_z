@@ -149,6 +149,26 @@ demographics_data = demographics_data %>%
   mutate( rent_own_ratio = renter_occ / owner_occ )
 
 
+demographics_data <- 
+  mutate(demographics_data, 
+         rural_class=if_else( pop12_sqmi < 20, "rural", "not rural", missing=NULL))
+
+# column to show whether county was rural or not
+rural_not_rural <- demographics_data %>% 
+  select( name, rural_class, rent_own_ratio )  
+
+rural_counties = rural_not_rural   %>%
+  filter( rural_class == "rural" ) %>%
+  arrange( desc( rent_own_ratio  ) ) %>%
+  rename( `County` = name,
+          `Class`  = rural_class,
+          `Rent vs Own Ratio` = rent_own_ratio )
+
+
+
+```
+```{r tmp}
+rural_counties %>% head( 6 )
 
 ```
 
