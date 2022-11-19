@@ -18,6 +18,7 @@ author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho (Group Z)'
 library(tidyverse)
 library(dplyr)
 library(kableExtra)
+library(lubridate)
 
 # omit warning messages from library load
 # https://stackoverflow.com/questions/45399587/how-to-remove-warning-messages-in-r-markdown-document
@@ -121,18 +122,30 @@ funding_data = funding_data %>%
     gsub( '[$,]', '', funding_data[["Total Costs of OSHPD Projects"]] ) 
   ))
 
-
-# subset HCAI funding data for those "In Closure" state
-
-problem_funding_data <- funding_data %>%
-  #group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%
-  filter(`OSHPD Project Status` == "In Closure") %>%
-  filter(`Data Generation Date` == "2022-08-11")
-
 funding_data = funding_data %>%
   mutate( county_name = str_sub( County, 6 )) %>%
   subset(select = -c(County)) %>%
   rename(County = county_name)
+
+
+# subset HCAI funding data for those "In Closure" state
+
+funding_data <- funding_data %>%
+  filter(`OSHPD Project Status` == "In Closure") %>%
+  filter(`Data Generation Date` == as_date("2022-08-11")  )
+
+
+  ## is 2022-08-11 the latest avail data? ++CHECK++
+
+    #group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%  
+  ## I (Tin) can no longer get the the gruop_by  to work... 
+
+funding_data %>% arrange( Numeric_Cost ) %>% head( 10 )
+
+
+#### Not sure why instruction team want us to focus on "In Closure"
+#### maybe stop the project from closing and fund it further?
+#### but if cost is 0 means there isn't actually any project?
 
 ```
 
