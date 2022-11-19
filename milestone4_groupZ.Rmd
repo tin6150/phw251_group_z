@@ -2,6 +2,7 @@
 title: "milestone4_groupZ"
 output: pdf_document
 date: '2022-11-19'
+author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho (Group Z)'
 ---
 
 # Project and Milestone overview
@@ -24,7 +25,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```
 
-## Loading & Cleaning data from Milestone 3
+## Loading & Cleaning data from Milestone 4
 
 **Suggestions from Lauren: 
   -confirm we're not double counting deaths in mortality data 
@@ -32,18 +33,19 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```{r load-data, echo=FALSE, include=FALSE}
 
-#   - Utilize function arguments to control relevant components 
-#     (i.e. change column types, column names, missing values, etc.)
+# Load demographics data
 
 demographics_path = 'data/ca_county_demographics.csv'
 demographics_data = read_csv( demographics_path, 
                               na = c("", "NA", "-"), 
                               show_col_types=F )
+
 # the first column contains id number, but it is unamed, so renaming it
 # rest of the columns have reasonable names, so left them as is.
 demographics_data = rename( demographics_data, id="...1")
 
 # View(demographics_data)
+
 
 # Loading Mortality Data 
 
@@ -51,7 +53,6 @@ mortality_path <- 'data/ca_county_mortality.csv'
 mortality_data_raw <- read_csv(mortality_path, 
                            na= c("", "NA", "-"),
                            show_col_types=F)
-
 
 mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
 
@@ -69,8 +70,10 @@ funding_data <- read_csv(  funding_path,
 # finding where in the data frame there is an 'na'
 # https://www.geeksforgeeks.org/find-columns-and-rows-with-na-in-r-dataframe/
 funding_data_no_CtyColl = select(funding_data, -c("Collection of Counties"))
-which(is.na(funding_data_no_CtyColl), arr.ind=T)
-# and we find that only the column "Collection of Counties" has 'na'
+
+## which(is.na(funding_data_no_CtyColl), arr.ind=T)
+# above returns 0 rows, ie
+# we find that only the column "Collection of Counties" has 'na'
 # we will leave this for now since it may just be a colloquial reference
 # unimportant for our data analysis.
 # no replacement for na with 0 will be done on this data frame.
@@ -89,7 +92,9 @@ funding_data = funding_data %>%
 
 ```
 
-```{r subset_data}
+```{r massage mortality data, echo=FALSE, include=FALSE}
+
+# subset mortality data for chronic conditions only
 
 chronic_desc = c( 
   "Chronic lower respiratory diseases",
@@ -104,38 +109,52 @@ chronic_desc = c(
   "Parkinson's disease"
   )
 
-
 chronic_mortality_data = mortality_data %>% 
   filter( Cause_Desc %in% chronic_desc )
 
 num_rows_befor_filter = mortality_data %>% tally
 num_rows_after_filter = chronic_mortality_data %>% tally
+#num_rows_after_filter
 
 num_rows_filtered = num_rows_befor_filter - num_rows_after_filter
 num_rows_filtered
+```
+
+```{r massage funding data, echo=FALSE, include=FALSE}
+
+# subset HCAI funding data for those "In Closure" state
 
 funding_data <- funding_data %>%
   group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%
   filter(`OSHPD Project Status` == "In Closure") %>%
   filter(`Data Generation Date` == "2022-08-11")
-  
-
-
-demographics_data <- demographics_data %>%
-  select(id, name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ)
-
-```
-
-```{r create_new_vars}
-
-## Renters vs Homeowners Ratio
-demographics_data = demographics_data %>%
-  mutate( rent_own_ratio = renter_occ / owner_occ )
 
 funding_data = funding_data %>%
   mutate( county_name = str_sub( County, 6 )) %>%
   subset(select = -c(County)) %>%
   rename(County = county_name)
+
+```
+
+
+```{r massage demographics data, echo=FALSE, include=FALSE}
+
+# massaging demographics data
+
+demographics_data <- demographics_data %>%
+  select(id, name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ)
+
+## Determining Renters vs Homeowners Ratio
+demographics_data = demographics_data %>%
+  mutate( rent_own_ratio = renter_occ / owner_occ )
+
+
+
+```
+
+```{r join tables, echo=FALSE, include=FALSE}
+
+
 
 ```
 
