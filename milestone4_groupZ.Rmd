@@ -170,7 +170,9 @@ demographics_data = rename( demographics_data, id="...1")
 # massaging demographics data
 
 demographics_data <- demographics_data %>%
-  select(id, name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ)
+  select(id, name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ) %>%
+  rename( `County` = name )
+
 
 ## Determining Renters vs Homeowners Ratio
 demographics_data = demographics_data %>%
@@ -183,25 +185,156 @@ demographics_data <-
 
 # column to show whether county was rural or not
 rural_not_rural <- demographics_data %>% 
-  select( name, rural_class, rent_own_ratio )  
+  select( County, rural_class, pop12_sqmi, rent_own_ratio, med_age )  
 
 rural_counties = rural_not_rural   %>%
-  filter( rural_class == "rural" ) %>%
-  arrange( desc( rent_own_ratio  ) ) %>%
-  rename( `County` = name,
-          `Class`  = rural_class,
-          `Rent vs Own Ratio` = rent_own_ratio )
-
-
+  filter( rural_class == "rural" ) 
+  #rename( `Class`  = rural_class )
 
 ```
+
+
+```{r demographics data complete set high rental, old age, echo=FALSE, include=FALSE}
+
+high_rental_ratio = 
+  rural_counties %>% arrange( desc( rent_own_ratio  ) ) 
+
+high_med_age = 
+  rural_counties %>% arrange( desc( med_age  ) ) 
+
+## Determine any counties satisfy triple whammy rule
+
+avg_rent_ratio = mean( demographics_data$rent_own_ratio )
+avg_age        = mean( demographics_data$med_age  )
+
+demographics_data = demographics_data %>% 
+  mutate( high_med_age = if_else( med_age > avg_age , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   )) %>%
+  mutate( high_rental = if_else( rent_own_ratio > avg_rent_ratio , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   )) 
+  
+triple_whammy = demographics_data %>%
+  filter( rural_class  == "rural" &
+          high_rental  == TRUE    &  
+          high_med_age == TRUE       )
+
+### so 0 county satisfy the triple whammy rule
+### need to modify  selection criteria
+```
+
+
+```{r demographics data RURAL set only, high rental, old age, echo=FALSE, include=FALSE}
+
+## Use only RURAL counties to calculate their averages, and what's above average
+
+## Determine any RURAL counties satisfy double whammy rule
+#View(rural_counties)
+
+avg_rent_ratio_rural = mean( rural_counties$rent_own_ratio )
+avg_age_rural        = mean( rural_counties$med_age  )
+
+
+
+rural_demographics_data = demographics_data %>% 
+  mutate( high_med_age_rural = if_else( med_age > avg_age_rural , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   )) %>%
+  mutate( high_rental_rural = if_else( rent_own_ratio > avg_rent_ratio_rural , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   )) 
+
+#-- c( avg_rent_ratio, avg_rent_ratio_rural, avg_age, avg_age_rural )
+#-- sn50 =  rural_demographics_data %>% filter( rural_class == "rural" ) 
+```
+
+```{r tmp-double-whammy}
+
+rural_double_whammy = rural_demographics_data %>%
+  filter( 
+          high_rental_rural  == TRUE    &  
+          high_med_age_rural == TRUE       )
+
+
+
+rural_double_whammy  # only 3 counties in this list: Lake, Siskiyou, Inyo
+
+rural_demographics_data %>% arrange( rent_own_ratio, med_age ) %>% head( 6 )
+
+```
+
+
+```{r dem relaxed criteria: old age, high rental in rural standard, echo=FALSE, include=FALSE}
+
+## determine old age as > avg age for full data set
+## then pick rural countries, 
+## high rental in such rural counties.
+
+
+#View(rural_counties)
+
+
+focus_demographics_data = demographics_data %>% 
+  mutate( high_rental_rural = if_else( rent_own_ratio > avg_rent_ratio_rural , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   )) %>%
+  mutate( high_med_age = if_else( med_age > avg_age , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   ))
+
+#-- c( avg_rent_ratio, avg_rent_ratio_rural, avg_age, avg_age_rural )
+#-- sn50 =  focus_demographics_data %>% filter( rural_class == "rural" ) 
+
+```
+
+```{r tmp-focus}
+
+focus_dem = rural_demographics_data %>%
+  filter( 
+          high_rental_rural  == TRUE    &  
+          high_med_age == TRUE       )    %>%
+  select( County, rural_class, high_med_age, high_rental_rural )
+
+
+rural_demographics_data %>%
+  select( County, rural_class, med_age, high_med_age, high_rental_rural ) %>%
+  arrange( high_rental_rural, desc(med_age) )
+
+
+
+#View(focus_dem)  # now have 13 counties to choose from
+
+```
+
+
+
 ```{r tmp}
 
 ## decide if need to output any of these tables
 ## likely need to refine further 
-rural_counties %>% head( 6 )
+
+high_rental_ratio %>% head( 6 )
+
+high_med_age %>% head( 6 )
+
+rural_double_whammy %>% head( 6 )
+
+focus_dem %>% head( 13 )
 
 ```
+
+
+It doesn't seems like we have high rental (ie > avg_rent) and old age (>avg_age)
+so we will have to judge subjectively
+-Tin
+
 
 ```{r join tables, echo=FALSE, include=FALSE}
 
