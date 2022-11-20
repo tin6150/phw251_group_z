@@ -467,7 +467,7 @@ fund_dem_chron = inner_join( demographics_chronic,
 
 viz_fund_dem_chron = fund_dem_chron %>%
   select( County, 
-          #pop12_sqmi,
+          pop12_sqmi,
           rural_class,  
           #low_pop,
           med_age,
@@ -523,7 +523,48 @@ about this one
 
 #Print Quality Table
 
-```{r}
+++FIXME++
+
+NOTE: this may not be county with higher crhonic for all 58, just those that fit the 
+rural high renter old age criteria
+
+
+```{r print quality table, fig.cap="fig_caption_fixme"}
+
+library(kableExtra)
+
+#focus_table = fund_dem_chron %>%
+focus_table = viz_focus %>%
+  select( County, 
+          pop12_sqmi,
+          #rural_class,  
+          #low_pop,
+          med_age,
+          #high_med_age,
+          rent_own_ratio,
+          #high_rental,
+          pct,                    # prevalence,         
+          Numeric_Cost, 
+          #fund_per_cap,
+          #`Number of OSHPD Projects`,
+  ) %>% 
+  arrange( desc( pct )) %>%
+  rename(
+    `Pop Density` = pop12_sqmi,
+    `Median Age` = med_age,
+    `Rent:Own Ratio` = rent_own_ratio,
+    `% Chronic`      = pct,
+    `HCAI Fund in 2022` = Numeric_Cost
+  ) %>%
+  
+  head( 5 ) 
+
+kable( focus_table,
+       booktabs=T,
+       digits=c(0,1,1,2,2,0),
+       format.args=list(big.mark=','),
+       caption = "Rural Counties with high median age, rental ratio, and chronic disease rate",
+       )
 
 ```
 
