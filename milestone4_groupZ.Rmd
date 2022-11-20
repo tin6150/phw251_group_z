@@ -390,7 +390,7 @@ viz_fund_dem_chron = fund_dem_chron %>%
   select( County, 
           #pop12_sqmi,
           rural_class,  
-          low_pop,
+          #low_pop,
           med_age,
           high_med_age,
           rent_own_ratio,
@@ -413,19 +413,20 @@ feel_for_data = viz_fund_dem_chron %>%
   #filter( low_pop == TRUE )         # no good, 49 counties in this grouping
 
 feel_for_data %>% 
-  arrange( desc( fund_per_cap ) ) 
-### above are all 0... why "In Closure"... need to poke more...
+  arrange( desc( fund_per_cap ) ) %>% head( 10 )
+### above are all 0... which implies no fundings for them... should give them some love!?
 
 
 viz_focus = viz_fund_dem_chron %>%
-  filter( low_pop      == TRUE,
-          high_med_age == TRUE 
-          ##high_rental  == TRUE  
+  filter( rural_class      == "rural",
+          high_med_age     == TRUE 
+          ##high_rental    == TRUE  
           )
 
 
-viz_focus %>% head( 10 )
+viz_focus %>% arrange( desc( rent_own_ratio ) )  %>% head( 10 )
 
+# this maybe ok list, but double check that they indeed got no funding!
 
 ```
 
