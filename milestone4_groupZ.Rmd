@@ -212,6 +212,18 @@ rural_counties = rural_not_rural   %>%
   filter( rural_class == "rural" ) 
   #rename( `Class`  = rural_class )
 
+
+#### consider a "low pop density" rather than a strict "rural"
+#### --> not really good, 49 counties in this grouping
+
+avg_pop_density = mean( demographics_data$pop12_sqmi )
+demographics_data = demographics_data %>% 
+  mutate( low_pop = if_else( pop12_sqmi < avg_pop_density , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   ))
+
+
 ```
 
 
@@ -363,15 +375,57 @@ so we will have to judge subjectively
 # Join Chronics mortality data (by county, last 5 years)
 # and demographics data
 
-demographics_chronic <- left_join(demographics_data, 
+demographics_chronic = left_join( demographics_data, 
                                   chronic_by_county, 
-                                  by = "County" ) %>% 
+                                  by = "County"      ) %>% 
   mutate( prevalence = ( sum_count / pop2012) * 1000 )
   
 
+fund_dem_chron = inner_join( demographics_chronic,
+                             funding_data, 
+                             by = "County" ) %>%
+  mutate( fund_per_cap = Numeric_Cost / pop2012 )
+
+viz_fund_dem_chron = fund_dem_chron %>%
+  select( County, 
+          #pop12_sqmi,
+          rural_class,  
+          low_pop,
+          med_age,
+          high_med_age,
+          rent_own_ratio,
+          high_rental,
+          prevalence,
+          Numeric_Cost, 
+          fund_per_cap,
+          `Number of OSHPD Projects`,
+          )
+
+```
 
 
-## NOTE: should use the chronic_mortality subset.
+```{r DRAFT tables for viz }
+
+#### for viz, ponder about using these, or derivative thereof 
+
+feel_for_data = viz_fund_dem_chron %>% 
+  filter( rural_class == "rural" ) 
+  #filter( low_pop == TRUE )         # no good, 49 counties in this grouping
+
+feel_for_data %>% 
+  arrange( desc( fund_per_cap ) ) 
+### above are all 0... why "In Closure"... need to poke more...
+
+
+viz_focus = viz_fund_dem_chron %>%
+  filter( low_pop      == TRUE,
+          high_med_age == TRUE 
+          ##high_rental  == TRUE  
+          )
+
+
+viz_focus %>% head( 10 )
+
 
 ```
 
