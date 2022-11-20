@@ -19,6 +19,7 @@ library(tidyverse)
 library(dplyr)
 library(kableExtra)
 library(lubridate)
+library(ggplot2)
 
 # omit warning messages from library load
 # https://stackoverflow.com/questions/45399587/how-to-remove-warning-messages-in-r-markdown-document
@@ -148,25 +149,102 @@ funding_data = funding_data %>%
   subset(select = -c(County)) %>%
   rename(County = county_name)
 
-
 # subset HCAI funding data for those "In Closure" state
 
-funding_data <- funding_data %>%
+funding_data_closure <- funding_data %>%
   filter(`OSHPD Project Status` == "In Closure") %>%
   filter(`Data Generation Date` == as_date("2022-08-11")  )
 
-
-  ## is 2022-08-11 the latest avail data? ++CHECK++
+  ## 2022-08-11 the latest avail data
 
     #group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%  
   ## I (Tin) can no longer get the the gruop_by  to work... 
 
-funding_data %>% arrange( Numeric_Cost ) %>% head( 10 )
 
 
-#### Not sure why instruction team want us to focus on "In Closure"
-#### maybe stop the project from closing and fund it further?
-#### but if cost is 0 means there isn't actually any project?
+```
+
+
+
+```{r spot checks, echo=FALSE, include=FALSE}
+
+
+funding_data_closure %>% arrange( Numeric_Cost ) %>% head( 10 )
+
+#View(funding_data)
+#View(funding_data_closure)
+
+funding_data %>% select( `Data Generation Date` ) %>% unique() %>% tally() ## 231 rows
+
+selected_counties = c(
+  "Inyo",
+  "Siskiyou",
+  "Mariposa",
+  "Modoc",
+  "Plumas"
+)
+
+funding_data_selected_counties = funding_data %>% 
+  #filter( County == "Alameda" ) %>%
+  #filter( County == "Inyo" ) %>%
+  filter( County %in% selected_counties  ) %>%
+  #filter( `OSHPD Project Status` == "In Closure"  ) %>%
+  filter( `OSHPD Project Status` == "In Construction"  ) %>%
+  #filter( `OSHPD Project Status` == "Pending Construction"  ) %>%
+  #filter( `OSHPD Project Status` == "In Review"  ) %>%
+  filter( `Data Generation Date` > 
+            #as_date( "2022-01-01" ) 
+            as_date( "2016-01-01" ) 
+          )
+
+chk1 = 
+  ggplot( data = funding_data_selected_counties,
+          aes( x = `Data Generation Date`, 
+               y = Numeric_Cost             ) ) +
+  geom_bar( stat="identity", position="dodge" ) +
+  labs( title = 'Prj cost over time' ) + 
+  facet_wrap( ~ County )
+
+
+chk1
+
+
+## some number may linger in closure for longer than other?
+## so taking average of closure amount over say 5 months may lead to skewed data
+## really just make sense to just use the last data point.
+
+
+funding_data_allSources = funding_data %>% 
+  #filter( County == "Alameda" ) %>%
+  filter( County == "Mariposa" ) %>%
+  #filter( County == "Inyo" ) %>%
+  #filter( County %in% selected_counties  ) %>%
+  filter( `Data Generation Date` > 
+            #as_date( "2022-01-01" ) 
+            #as_date( "2020-01-01" ) 
+            as_date( "2016-01-01" ) 
+          )
+
+
+chk_allSrc = 
+  ggplot( data = funding_data_allSources,
+          aes( x = `Data Generation Date`, 
+               y = Numeric_Cost             ) ) +
+  geom_bar( stat="identity", position="dodge" ) +
+  labs( title = '1 county, prj stage' ) + 
+  facet_wrap( ~ `OSHPD Project Status` )
+
+
+chk_allSrc
+
+
+## there is likely more to the story about these costs
+## expect to see approved project to have a peak in Review
+## then the peak move to Pending Construction, In Construction
+## then In Closure
+## but maybe their cost is finance book remaining budget account?
+## data doesn't fully make sense
+## but it is just homework, take a snapshot of "In Closure", and let it be.
 
 ```
 
@@ -380,11 +458,10 @@ demographics_chronic = left_join( demographics_data,
                                   by = "County"      ) %>% 
   mutate( pct = ( sum_count / pop2012) * 100 )
   
-
-## ++FIXME++ was using prevalence if per 1000 pop, but using % for now
+## was using prevalence if per 1000 pop, but using % for now
 
 fund_dem_chron = inner_join( demographics_chronic,
-                             funding_data, 
+                             funding_data_closure, 
                              by = "County" ) %>%
   mutate( fund_per_cap = Numeric_Cost / pop2012 )
 
@@ -431,6 +508,7 @@ viz_focus %>% arrange( desc( rent_own_ratio ) )  %>% head( 10 )
 # this maybe ok list, but double check that they indeed got no funding!
 
 ```
+
 
 \newpage 
 
