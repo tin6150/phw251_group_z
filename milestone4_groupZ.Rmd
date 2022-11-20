@@ -187,14 +187,15 @@ selected_counties = c(
 funding_data_selected_counties = funding_data %>% 
   #filter( County == "Alameda" ) %>%
   #filter( County == "Inyo" ) %>%
-  filter( County %in% selected_counties  ) %>%
-  #filter( `OSHPD Project Status` == "In Closure"  ) %>%
-  filter( `OSHPD Project Status` == "In Construction"  ) %>%
+  #filter( County %in% selected_counties  ) %>%
+  filter( `OSHPD Project Status` == "In Closure" |
+            `OSHPD Project Status` == "In Construction"    ) %>%
   #filter( `OSHPD Project Status` == "Pending Construction"  ) %>%
   #filter( `OSHPD Project Status` == "In Review"  ) %>%
-  filter( `Data Generation Date` > 
-            #as_date( "2022-01-01" ) 
-            as_date( "2016-01-01" ) 
+  filter( `Data Generation Date` == 
+            as_date( "2022-08-11" ) 
+            #as_date( "2020-01-01" ) 
+            #as_date( "2016-01-01" ) 
           )
 
 chk1 = 
@@ -216,9 +217,9 @@ chk1
 
 funding_data_allSources = funding_data %>% 
   #filter( County == "Alameda" ) %>%
-  filter( County == "Mariposa" ) %>%
+  #filter( County == "Mariposa" ) %>%
   #filter( County == "Inyo" ) %>%
-  #filter( County %in% selected_counties  ) %>%
+  filter( County %in% selected_counties  ) %>%
   filter( `Data Generation Date` > 
             #as_date( "2022-01-01" ) 
             #as_date( "2020-01-01" ) 
@@ -570,13 +571,42 @@ kable( focus_table,
 
 #Print Quality Plot or Chart
 
+The following boxplot summarizes chronic disease mortality rates from all 
+CA counties, grouped according to HCAI funding amounts for in closure projects 
+as of August 2022. The funding amounts were categorized as "high" if they were 
+above the mean amount, low if they were below the mean, and "no funding" if no 
+funding for in closure projects was reported. 
+
+
 ```{r}
 
+funding_chronic <- funding_data %>% 
+  filter( `OSHPD Project Status` == "In Closure") %>%
+  filter( `Data Generation Date` == as_date( "2022-08-11")) %>%
+  mutate(funding_amount = case_when(
+    Numeric_Cost > 12239849 ~ "High Funding", 
+    Numeric_Cost == 0 ~ "No Funding", 
+    Numeric_Cost < 12239849 ~ "Low Funding"
+  )) %>%
+  inner_join(demographics_chronic, funding_data_all_counties, by = "County") %>%
+  select(pct, County, funding_amount, rural_class, Numeric_Cost)
+
+plot_ly(
+  funding_chronic,
+  y=~pct,
+  color= ~funding_amount,
+  type="box"
+) %>%
+   layout(
+    title="Chronic Disease Mortality Rates & HCAI Funding",
+    yaxis=list(title="Chronic Disease Rate"))
 ```
 
 #Print Quality Table, Plot or Chart
 
 ```{r}
+
+
 
 ```
 
