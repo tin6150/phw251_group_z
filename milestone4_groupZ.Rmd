@@ -47,6 +47,8 @@ mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
 # View(mortality_data)
 # There are NA values in mortality_data, so we need to replace NA w/ 0
 
+mortality_data %>% select( Year ) %>% unique()
+# Mortality data is from 2014 - 2020.
 
 # subset mortality data for chronic conditions only
 
@@ -72,6 +74,25 @@ num_rows_after_filter = chronic_mortality_data %>% tally
 
 num_rows_filtered = num_rows_befor_filter - num_rows_after_filter
 num_rows_filtered
+
+
+#View(chronic_mortality_data)
+
+# chronic case count by county in the last 5 years
+# Question prompt:
+## Second, OHE’s director would also like to include a total count of mortality 
+## from chronic health conditions 
+## over the past few years into the county level analysis. 
+
+
+chronic_by_county = chronic_mortality_data %>%
+  filter(  Strata == "Total Population") %>%
+  filter(  Geography_Type == "Occurrence" ) %>%
+  select( -Geography_Type ) %>% # Geo type restricted to "Occurrence"
+  filter( Year > 2016 )     %>%   # 2016-2020 = 5 years
+  group_by( County ) %>%
+  summarize( sum_count = sum(Count) )
+
 ```
 
 ```{r massage funding data, echo=FALSE, include=FALSE}
@@ -339,6 +360,17 @@ so we will have to judge subjectively
 ```{r join tables, echo=FALSE, include=FALSE}
 
 
+# Join Chronics mortality data (by county, last 5 years)
+# and demographics data
+
+demographics_chronic <- left_join(demographics_data, 
+                                  chronic_by_county, 
+                                  by = "County" ) %>% 
+  mutate( prevalence = ( sum_count / pop2012) * 1000 )
+  
+
+
+
 ## NOTE: should use the chronic_mortality subset.
 
 ```
@@ -372,3 +404,13 @@ about this one
 
 ```
 
+
+### PS
+
+Mortality data is from 2014 - 2020, and want "last few years"
+
+Demographics data has pop2012
+
+Funding we are using latest, 2022-08-11, earliest is 2013.
+
+In real world we should use the latest data that is on a consistent state, for this exercise, we picked a date from each data set and then just pretend they can be joined.
