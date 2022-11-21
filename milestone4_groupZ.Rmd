@@ -18,9 +18,10 @@ in this address:
 [{Pasted to group's gdoc}](https://docs.google.com/document/d/1u4-f0KCUB0QGxWI1VVgfEgEaTmQbt-Jk1uIgWP-0VYk/edit#)
 
 
-# R setup and load libraries
+# R setup and data preparation
 
-(this code block omitted for brevity)
+(This code block omitted for brevity, please refer to source at our
+[github repo](https://github.com/tin6150/phw251_group_z) )
 
 ```{r load-lib, include=FALSE, echo=FALSE}
 library(tidyverse)
@@ -534,6 +535,8 @@ have a high median age, and fairly high ratio of renters.
 More importantly, they have one of the highest percentage of chronic diseases,
 and no HCAI fundings that are "In Closure" as of 2022-08-11.
 
+Note that the latest population data is from 2012.
+
 
 ```{r print quality table, fig.cap="fig_caption_fixme"}
 
@@ -612,23 +615,79 @@ plot_ly(
     yaxis=list(title="Chronic Disease Rate"))
 ```
 
-# Print Quality Table, Plot or Chart
+# Funding for select counties
 
-```{r}
+```{r viz: funding for select counties}
 
+counties_funding_comp = funding_data %>%
+  filter( `OSHPD Project Status` == "In Closure"  ) %>%
+  filter( `Data Generation Date` ==
+            as_date( "2022-08-11" )
+            #as_date( "2020-01-01" )
+            #as_date( "2016-01-01" )
+          ) %>%
+  arrange( Numeric_Cost )
+
+#fig2 = plot_ly( data = funding_data_1county ) %>%
+#fig2 = plot_ly( data = funding_data_selected_counties ) %>%
+fig2 = plot_ly( data = counties_funding_comp ) %>%
+  add_trace(x = ~`County`,
+            y = ~Numeric_Cost,
+            type = 'bar',
+            name = 'Funding across 58 counties',
+            marker = list(color = 'rgb(187, 216, 228)'),
+            hoverinfo = "text",
+            text = ~paste(round(Numeric_Cost, 0), ' US$')  ) %>%
+   layout(
+            title="Funding across 58 counties"
+         )
+
+fig2
 
 
 ```
 
 
-### PS
+# Mortality Rate by County
 
-Mortality data is from 2014 - 2020, and want "last few years"
+Below is a graph of Mortality Rate for Chronic diseases (as defined by CDC)
+across all 58 California counties.
+The 5 counties of focus have Mortality rates of:
+(TBD)
 
-Demographics data has pop2012
 
-Funding we are using latest, 2022-08-11, earliest is 2013.
+```{r viz: chronic mortality rates by counties}
 
-In real world we should use the latest data that is on a consistent state, for this exercise, we picked a date from each data set and then just pretend they can be joined.
+chronic_focus_counties = demographics_chronic %>% 
+  mutate( focusCounty = if_else(
+    County %in% selected_counties,
+    TRUE,
+    FALSE
+  ) ) %>%
+  mutate( ctyColor = case_when(
+    County == "Siskiyou" ~ "red", 
+    County == "Inyo"     ~ "darkorange" , 
+    County == "Mariposa" ~ "blue", 
+    County == "Plumas"   ~ "darkblue",
+    County == "Modoc"    ~ "darkcyan",
+    TRUE                 ~ "darkyellow"
+  ) )
 
-posted question to Ed: https://edstem.org/us/courses/25507/discussion/2190932
+fig3 = plot_ly( data = chronic_focus_counties ) %>%
+  add_trace(x = ~`County`,
+            y = ~pct,
+            type = 'bar',
+            #color = ~focusCounty,
+            color = ~ctyColor,
+            name = 'Chronic Mortality Rates by Counties',
+            marker = list(color = 'rgb(187, 216, 228)'),
+            hoverinfo = "text",
+            text = ~paste('County: ', County, '<BR>Mortality Rate:', round(pct, 1))  ) %>%
+   layout(
+            title = "Chronic Mortality Rates by Counties", 
+            yaxis = list( title="% Mortality Rate" )
+         )
+
+fig3
+
+```
