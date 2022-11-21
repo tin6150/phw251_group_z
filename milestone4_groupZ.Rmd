@@ -651,43 +651,48 @@ fig2
 # Mortality Rate by County
 
 Below is a graph of Mortality Rate for Chronic diseases (as defined by CDC)
-across all 58 California counties.
-The 5 counties of focus have Mortality rates of:
-(TBD)
+across 11 rural counties (as defined by National Rural Development Partnership)
+The 5 counties of focus have the highest mortality rates in this group.
 
+Note that we don't have disease data for Alpine or Sierra county.  
 
 ```{r viz: chronic mortality rates by counties}
 
-chronic_focus_counties = demographics_chronic %>% 
-  mutate( focusCounty = if_else(
-    County %in% selected_counties,
-    TRUE,
-    FALSE
-  ) ) %>%
+#chronic_focus_counties = rural_counties %>% 
+chronic_focus_counties = inner_join(
+    demographics_chronic,
+    rural_counties,
+    by = "County"                   ) %>%
   mutate( ctyColor = case_when(
     County == "Siskiyou" ~ "red", 
     County == "Inyo"     ~ "darkorange" , 
     County == "Mariposa" ~ "blue", 
     County == "Plumas"   ~ "darkblue",
     County == "Modoc"    ~ "darkcyan",
-    TRUE                 ~ "darkyellow"
+    TRUE                 ~ "rgb(187, 216, 228)"
   ) )
 
+
 fig3 = plot_ly( data = chronic_focus_counties ) %>%
-  add_trace(x = ~`County`,
+  add_trace(x = ~County,
             y = ~pct,
             type = 'bar',
-            #color = ~focusCounty,
-            color = ~ctyColor,
             name = 'Chronic Mortality Rates by Counties',
-            marker = list(color = 'rgb(187, 216, 228)'),
+            marker = list(color = ~ctyColor),
             hoverinfo = "text",
-            text = ~paste('County: ', County, '<BR>Mortality Rate:', round(pct, 1))  ) %>%
+            text = ~paste('County: ', 
+                          County, 
+                          '<BR> Mortality Rate:', 
+                          round(pct, 1), 
+                          "%"                      )  ) %>%
    layout(
-            title = "Chronic Mortality Rates by Counties", 
-            yaxis = list( title="% Mortality Rate" )
+            title = "Chronic Mortality Rates For California's Rural Counties", 
+            yaxis = list( title="% Mortality Rate" ),
+            xaxis = list( title="County")
          )
 
 fig3
+
+## TBD: find a way to arrange them by mortality rate
 
 ```
