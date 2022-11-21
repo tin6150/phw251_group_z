@@ -691,3 +691,4 @@ fig3 = plot_ly( data = chronic_focus_counties ) %>%
 fig3
 
 ```
+Table showing most common disease by rural county* thinking of ideas, will have it done by 1pm tomorrow before work! 
