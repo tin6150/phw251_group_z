@@ -13,3 +13,8 @@ Project choice:
 Scenario 1
 
 Project Assigment page in [bCourses](https://bcourses.berkeley.edu/courses/1517565/pages/team-project).
+
+Milestone 4 knitted HTML output:
+[https://tin6150.github.io/phw251_group_z/milestone4_groupZ.html](https://tin6150.github.io/phw251_group_z/milestone4_groupZ.html).
+
+

@@ -5,6 +5,14 @@ date: '2022-11-19'
 author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho'
 ---
 
+# Web Access to knitted HTML output
+
+We have decided to take a leap and try plot_ly and knit to html output for this milestone.
+The html page is hosted as [Github Pages](https://pages.github.com/) and is accessible
+in this address:
+[https://tin6150.github.io/phw251_group_z/milestone4_groupZ.html](https://tin6150.github.io/phw251_group_z/milestone4_groupZ.html)
+
+
 # Project and Milestone overview
 
 [{Pasted to group's gdoc}](https://docs.google.com/document/d/1u4-f0KCUB0QGxWI1VVgfEgEaTmQbt-Jk1uIgWP-0VYk/edit#)
