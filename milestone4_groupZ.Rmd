@@ -696,3 +696,4 @@ fig3
 ## TBD: find a way to arrange them by mortality rate
 
 ```
+Table showing most common disease by rural county* thinking of ideas, will have it done by 1pm tomorrow before work! 
