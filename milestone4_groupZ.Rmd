@@ -694,4 +694,16 @@ fig3
 ## TBD: find a way to arrange them by mortality rate
 
 ```
-Table showing most common disease by rural county* thinking of ideas, will have it done by 1pm tomorrow before work! 
+#Table showing most common disease by rural county* thinking of ideas, will have it done by 1pm tomorrow before work! 
+
+table_data_e<- inner_join(rural_not_rural, chronic_mortality_data, by= "County") %>% 
+select(c("County", "rural_class", "Cause","Count", "Year")) %>% filter(Year%in%2020) %>% 
+filter(rural_class=="rural") %>% 
+group_by(County,Cause) %>% summarize(count_cause=sum(Count)) %>% arrange(County,desc(c(count_cause))) %>% slice(c(1,11,21,31,41,51,61,71,81,91,101))
+
+table_data_e[1,2]<-"Not Available"
+table_data_e[9,2]<-"Not Available"
+
+common_chronic<- kable(table_data_e, col.names=c("County", "Chronic Disease", "Number Reported"),
+digits=0, booktabs=T, escape=F, align="ccc", caption="Most Common Chronic Disease by Rural County in 2020")
+common_chronic
