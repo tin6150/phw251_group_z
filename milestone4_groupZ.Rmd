@@ -1,13 +1,13 @@
 ---
-title: "milestone4_groupZ"
-output: pdf_document
+title: "Milestone 4 Group Z"
+output: html_document
 date: '2022-11-19'
-author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho (Group Z)'
+author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho'
 ---
 
 # Project and Milestone overview
 
-[Pasted to group's gdoc:](https://docs.google.com/document/d/1u4-f0KCUB0QGxWI1VVgfEgEaTmQbt-Jk1uIgWP-0VYk/edit#)
+[{Pasted to group's gdoc}](https://docs.google.com/document/d/1u4-f0KCUB0QGxWI1VVgfEgEaTmQbt-Jk1uIgWP-0VYk/edit#)
 
 
 # R setup and load libraries
@@ -20,6 +20,7 @@ library(dplyr)
 library(kableExtra)
 library(lubridate)
 library(ggplot2)
+library(plotly)
 
 # omit warning messages from library load
 # https://stackoverflow.com/questions/45399587/how-to-remove-warning-messages-in-r-markdown-document
@@ -27,14 +28,16 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```
 
-## Loading & Cleaning data from Milestone 4
-
-**Suggestions from Lauren: 
-  -confirm we're not double counting deaths in mortality data 
-  -summarize mortality rates by county and use rates instead of counts before joining 
-
 
 ```{r massage mortality data, echo=FALSE, include=FALSE}
+
+## Loading & Cleaning data : Mortality
+
+#**Suggestions from Lauren: 
+#  -confirm we're not double counting deaths in mortality data 
+#     Yes we are filtering by Total Population
+#  -summarize mortality rates by county and use rates instead of counts before joining 
+#     Okay now calculated Rate as count / pop12 
 
 # Loading Mortality Data 
 
@@ -97,8 +100,6 @@ chronic_by_county = chronic_mortality_data %>%
 ```
 
 ```{r massage funding data, echo=FALSE, include=FALSE}
-
-
 
 # Loading HCAI funding Data 
 
@@ -365,7 +366,7 @@ rural_demographics_data = demographics_data %>%
 #-- sn50 =  rural_demographics_data %>% filter( rural_class == "rural" ) 
 ```
 
-```{r tmp-double-whammy}
+```{r tmp-double-whammy, include=FALSE, echo=FALSE}
 
 rural_double_whammy = rural_demographics_data %>%
   filter( 
@@ -406,7 +407,7 @@ focus_demographics_data = demographics_data %>%
 
 ```
 
-```{r tmp-focus}
+```{r tmp-focus,  include=FALSE, echo=FALSE }
 
 focus_dem = rural_demographics_data %>%
   filter( 
@@ -419,15 +420,13 @@ rural_demographics_data %>%
   select( County, rural_class, med_age, high_med_age, high_rental_rural ) %>%
   arrange( high_rental_rural, desc(med_age) )
 
-
-
-#View(focus_dem)  # now have 13 counties to choose from
+#View(focus_dem)  # now have 13 counties to choose from, but not all rural
 
 ```
 
 
 
-```{r tmp}
+```{r discussion-use-only,  include=FALSE, echo=FALSE}
 
 ## decide if need to output any of these tables
 ## likely need to refine further 
@@ -440,26 +439,33 @@ rural_double_whammy %>% head( 6 )
 
 focus_dem %>% head( 13 )
 
+#It doesn't seems like we have high rental (ie > avg_rent) and old age (>avg_age)
+#so we will have to judge subjectively
+#-Tin
+
+
 ```
 
 
-It doesn't seems like we have high rental (ie > avg_rent) and old age (>avg_age)
-so we will have to judge subjectively
--Tin
 
+```{r calc chronic mortality rate, echo=F, include=F}
+# calc chronic mortality rate using census pop12 as denominator
 
-```{r join tables, echo=FALSE, include=FALSE}
-
-
-# Join Chronics mortality data (by county, last 5 years)
+# First need to Join Chronics mortality data (by county, last 5 years)
 # and demographics data
 
 demographics_chronic = left_join( demographics_data, 
                                   chronic_by_county, 
                                   by = "County"      ) %>% 
-  mutate( pct = ( sum_count / pop2012) * 100 )
-  
-## was using prevalence if per 1000 pop, but using % for now
+  mutate( pct = ( sum_count / pop2012 ) * 100 )
+
+# pct = "prevalence" percentage
+```
+
+
+
+```{r join tables, echo=FALSE, include=FALSE}
+
 
 fund_dem_chron = inner_join( demographics_chronic,
                              funding_data_closure, 
@@ -484,7 +490,7 @@ viz_fund_dem_chron = fund_dem_chron %>%
 ```
 
 
-```{r DRAFT tables for viz }
+```{r draft-viz-for-discussion-only, echo=FALSE, include=FALSE }
 
 #### for viz, ponder about using these, or derivative thereof 
 
@@ -497,23 +503,13 @@ feel_for_data %>%
 ### above are all 0... which implies no fundings for them... should give them some love!?
 
 
-viz_focus = viz_fund_dem_chron %>%
-  filter( rural_class      == "rural",
-          high_med_age     == TRUE 
-          ##high_rental    == TRUE  
-          )
-
-
-viz_focus %>% arrange( desc( rent_own_ratio ) )  %>% head( 10 )
-
-# this maybe ok list, but double check that they indeed got no funding!
 
 ```
 
 
 \newpage 
 
-#Visualizations
+# Visualizations & Code
 
 Data needed to make decision:
 -which counties share all 3 attributes: low pop(rural), high median age, 
@@ -522,19 +518,24 @@ Data needed to make decision:
 -what counties have received little to no funding recently? ---not quite sure 
 about this one
 
-#Print Quality Table
+# Rural Counties Deserving More HCAI Funding
 
-++FIXME++
-
-NOTE: this may not be county with higher crhonic for all 58, just those that fit the 
-rural high renter old age criteria
+Table 1 shows that the 5 counties of Siskiyou, Inyo, Mariposa, Plumas and Modoc
+have low population density (they qualify as Rural per National Rural Development Partnership's definition), 
+have a high median age, and fairly high ratio of renters.
+More importantly, they have one of the highest percentage of chronic diseases,
+and no HCAI fundings that are "In Closure" as of 2022-08-11.
 
 
 ```{r print quality table, fig.cap="fig_caption_fixme"}
 
-library(kableExtra)
 
-#focus_table = fund_dem_chron %>%
+viz_focus = viz_fund_dem_chron %>%
+  filter( rural_class      == "rural",
+          high_med_age     == TRUE 
+          ##high_rental    == TRUE  
+          )
+
 focus_table = viz_focus %>%
   select( County, 
           pop12_sqmi,
@@ -556,8 +557,7 @@ focus_table = viz_focus %>%
     `Rent:Own Ratio` = rent_own_ratio,
     `% Chronic`      = pct,
     `HCAI Fund in 2022` = Numeric_Cost
-  ) %>%
-  
+  ) %>%  
   head( 5 ) 
 
 kable( focus_table,
@@ -569,7 +569,7 @@ kable( focus_table,
 
 ```
 
-#Print Quality Plot or Chart
+# Print Quality Plot or Chart
 
 The following boxplot summarizes chronic disease mortality rates from all 
 CA counties, grouped according to HCAI funding amounts for in closure projects 
@@ -577,6 +577,8 @@ as of August 2022. The funding amounts were categorized as "high" if they were
 above the mean amount, low if they were below the mean, and "no funding" if no 
 funding for in closure projects was reported. 
 
+
+(Audrey, so what is graph telling the audience?)
 
 ```{r}
 
@@ -602,7 +604,7 @@ plot_ly(
     yaxis=list(title="Chronic Disease Rate"))
 ```
 
-#Print Quality Table, Plot or Chart
+# Print Quality Table, Plot or Chart
 
 ```{r}
 
@@ -620,3 +622,5 @@ Demographics data has pop2012
 Funding we are using latest, 2022-08-11, earliest is 2013.
 
 In real world we should use the latest data that is on a consistent state, for this exercise, we picked a date from each data set and then just pretend they can be joined.
+
+posted question to Ed: https://edstem.org/us/courses/25507/discussion/2190932
