@@ -5,7 +5,7 @@ date: '2022-11-19'
 author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho'
 ---
 
-# Web Access to knitted HTML output
+# Web access to knitted HTML output
 
 We have decided to take a leap and try plot_ly and knit to html output for this milestone.
 The html page is hosted as [Github Pages](https://pages.github.com/) and is accessible
@@ -13,7 +13,7 @@ in this address:
 [https://tin6150.github.io/phw251_group_z/milestone4_groupZ.html](https://tin6150.github.io/phw251_group_z/milestone4_groupZ.html)
 
 
-# Project and Milestone overview
+# Project and milestone overview
 
 [{Pasted to group's gdoc}](https://docs.google.com/document/d/1u4-f0KCUB0QGxWI1VVgfEgEaTmQbt-Jk1uIgWP-0VYk/edit#)
 
@@ -673,18 +673,16 @@ chronic_focus_counties = inner_join(
   ) )
 
 
-fig3 = plot_ly( data = chronic_focus_counties ) %>%
-  add_trace(x = ~County,
+fig3 = plot_ly( data = chronic_focus_counties ,
+            text = ~paste(County, round(pct, 1), "%"     )  # add_trace overwrite this :-\
+            ) %>%
+    add_trace(x = ~County,
             y = ~pct,
-            type = 'bar',
             name = 'Chronic Mortality Rates by Counties',
             marker = list(color = ~ctyColor),
             hoverinfo = "text",
-            text = ~paste('County: ', 
-                          County, 
-                          '<BR> Mortality Rate:', 
-                          round(pct, 1), 
-                          "%"                      )  ) %>%
+            text = ~paste(round(pct, 1), "%" ),  
+            type = 'bar') %>%
    layout(
             title = "Chronic Mortality Rates For California's Rural Counties", 
             yaxis = list( title="% Mortality Rate" ),
