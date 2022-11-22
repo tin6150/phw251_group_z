@@ -639,7 +639,10 @@ fig2 = plot_ly( data = counties_funding_comp ) %>%
             hoverinfo = "text",
             text = ~paste(round(Numeric_Cost, 0), ' US$')  ) %>%
    layout(
-            title="Funding across 58 counties"
+            title="Funding across 58 counties",
+            yaxis = list( title="Funding"),
+            xaxis = list( title="County", categoryorder='total descending' )
+            
          )
 
 fig2
@@ -673,10 +676,9 @@ chronic_focus_counties = inner_join(
   ) )
 
 
-fig3 = plot_ly( data = chronic_focus_counties ,
-            text = ~paste(County, round(pct, 1), "%"     )  # add_trace overwrite this :-\
-            ) %>%
-    add_trace(x = ~County,
+fig3 = plot_ly( data = chronic_focus_counties ) %>%
+    add_trace(
+            x = ~County,
             y = ~pct,
             name = 'Chronic Mortality Rates by Counties',
             marker = list(color = ~ctyColor),
@@ -685,18 +687,17 @@ fig3 = plot_ly( data = chronic_focus_counties ,
             type = 'bar') %>%
    layout(
             title = "Chronic Mortality Rates For California's Rural Counties", 
-            yaxis = list( title="% Mortality Rate" ),
-            xaxis = list( title="County")
+            yaxis = list( title="% Mortality Rate"),
+            xaxis = list( title="County", categoryorder='total descending' )
          )
 
 fig3
 
-## TBD: find a way to arrange them by mortality rate
-
 ```
-#Table showing most common disease by rural county
+# Table showing most common disease by rural county
 
 This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available. *HTD= Heart Disease, CAN= Cancer
+
 ```{r}
 table_data_e<- inner_join(rural_not_rural, chronic_mortality_data, by= "County") %>% 
 select(c("County", "rural_class", "Cause","Count", "Year")) %>% filter(Year%in%2020) %>% 
