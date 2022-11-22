@@ -515,19 +515,11 @@ feel_for_data %>%
 
 ```
 
-
 \newpage 
 
 # Visualizations & Code
 
-Data needed to make decision:
--which counties share all 3 attributes: low pop(rural), high median age, 
-& high proportion of renters vs homeowners
--which 5 counties have highest mortality rates due to chronic illness
--what counties have received little to no funding recently? ---not quite sure 
-about this one
-
-# Rural Counties Deserving More HCAI Funding
+## Rural Counties Deserving More HCAI Funding
 
 Table 1 shows that the 5 counties of Siskiyou, Inyo, Mariposa, Plumas and Modoc
 have low population density (they qualify as Rural per National Rural Development Partnership's definition), 
@@ -580,7 +572,49 @@ kable( focus_table,
 
 ```
 
-# Print Quality Plot or Chart
+## Mortality Rate by County
+
+Below is a graph of Mortality Rate for Chronic diseases (as defined by CDC)
+across 11 rural counties (as defined by National Rural Development Partnership)
+The 5 counties of focus have the highest mortality rates in this group.
+
+Note that we don't have disease data for Alpine or Sierra county.  
+
+```{r viz: chronic mortality rates by counties}
+
+chronic_focus_counties = inner_join(
+    demographics_chronic,
+    rural_counties,
+    by = "County"                   ) %>%
+  mutate( ctyColor = case_when(
+    County == "Siskiyou" ~ "red", 
+    County == "Inyo"     ~ "darkorange" , 
+    County == "Mariposa" ~ "blue", 
+    County == "Plumas"   ~ "darkblue",
+    County == "Modoc"    ~ "darkcyan",
+    TRUE                 ~ "rgb(187, 216, 228)"
+  ) )
+
+
+fig3 = plot_ly( data = chronic_focus_counties ) %>%
+    add_trace(
+            x = ~County,
+            y = ~pct,
+            name = 'Chronic Mortality Rates by Counties',
+            marker = list(color = ~ctyColor),
+            hoverinfo = "text",
+            text = ~paste(round(pct, 1), "%" ),  
+            type = 'bar') %>%
+   layout(
+            title = "Chronic Mortality Rates For California's Rural Counties", 
+            yaxis = list( title="% Mortality Rate"),
+            xaxis = list( title="County", categoryorder='total descending' )
+         )
+
+fig3
+
+```
+## Print Quality Plot or Chart
 
 The following boxplot summarizes chronic disease mortality rates from all 
 CA counties, grouped according to HCAI funding amounts for in closure projects 
@@ -615,9 +649,31 @@ plot_ly(
     yaxis=list(title="Chronic Disease Rate"))
 ```
 
+## Table showing most common disease by rural county
+
+This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available. *HTD= Heart Disease, CAN= Cancer
+
+```{r}
+table_data_e<- inner_join(rural_not_rural, chronic_mortality_data, by= "County") %>% 
+select(c("County", "rural_class", "Cause","Count", "Year")) %>% filter(Year%in%2020) %>% 
+filter(rural_class=="rural") %>% 
+group_by(County,Cause) %>% summarize(count_cause=sum(Count)) %>% arrange(County,desc(c(count_cause))) %>% slice(c(1,11,21,31,41,51,61,71,81,91,101))
+
+table_data_e[1,2]<-"Not Available"
+table_data_e[9,2]<-"Not Available"
+
+common_chronic<- kable(table_data_e, col.names=c("County", "Chronic Disease", "Number Reported"),
+digits=0, booktabs=T, escape=F, align="ccc", caption="Most Common Chronic Disease by Rural County in 2020")
+common_chronic
+```
+
+
+```{r viz: funding for select counties, include=F, echo=F }
+
+# Visuals saved for possible use in Milestone 5 
+
 # Funding for select counties
 
-```{r viz: funding for select counties}
 
 counties_funding_comp = funding_data %>%
   filter( `OSHPD Project Status` == "In Closure"  ) %>%
@@ -649,67 +705,3 @@ fig2
 
 
 ```
-
-
-# Mortality Rate by County
-
-Below is a graph of Mortality Rate for Chronic diseases (as defined by CDC)
-across 11 rural counties (as defined by National Rural Development Partnership)
-The 5 counties of focus have the highest mortality rates in this group.
-
-Note that we don't have disease data for Alpine or Sierra county.  
-
-```{r viz: chronic mortality rates by counties}
-
-#chronic_focus_counties = rural_counties %>% 
-chronic_focus_counties = inner_join(
-    demographics_chronic,
-    rural_counties,
-    by = "County"                   ) %>%
-  mutate( ctyColor = case_when(
-    County == "Siskiyou" ~ "red", 
-    County == "Inyo"     ~ "darkorange" , 
-    County == "Mariposa" ~ "blue", 
-    County == "Plumas"   ~ "darkblue",
-    County == "Modoc"    ~ "darkcyan",
-    TRUE                 ~ "rgb(187, 216, 228)"
-  ) )
-
-
-fig3 = plot_ly( data = chronic_focus_counties ) %>%
-    add_trace(
-            x = ~County,
-            y = ~pct,
-            name = 'Chronic Mortality Rates by Counties',
-            marker = list(color = ~ctyColor),
-            hoverinfo = "text",
-            text = ~paste(round(pct, 1), "%" ),  
-            type = 'bar') %>%
-   layout(
-            title = "Chronic Mortality Rates For California's Rural Counties", 
-            yaxis = list( title="% Mortality Rate"),
-            xaxis = list( title="County", categoryorder='total descending' )
-         )
-
-fig3
-
-```
-# Table showing most common disease by rural county
-
-This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available. *HTD= Heart Disease, CAN= Cancer
-
-```{r}
-table_data_e<- inner_join(rural_not_rural, chronic_mortality_data, by= "County") %>% 
-select(c("County", "rural_class", "Cause","Count", "Year")) %>% filter(Year%in%2020) %>% 
-filter(rural_class=="rural") %>% 
-group_by(County,Cause) %>% summarize(count_cause=sum(Count)) %>% arrange(County,desc(c(count_cause))) %>% slice(c(1,11,21,31,41,51,61,71,81,91,101))
-
-table_data_e[1,2]<-"Not Available"
-table_data_e[9,2]<-"Not Available"
-
-common_chronic<- kable(table_data_e, col.names=c("County", "Chronic Disease", "Number Reported"),
-digits=0, booktabs=T, escape=F, align="ccc", caption="Most Common Chronic Disease by Rural County in 2020")
-common_chronic
-```
-
-
