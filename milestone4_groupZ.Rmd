@@ -30,6 +30,7 @@ library(kableExtra)
 library(lubridate)
 library(ggplot2)
 library(plotly)
+library(formattable)   # for currency()
 
 # omit warning messages from library load
 # https://stackoverflow.com/questions/45399587/how-to-remove-warning-messages-in-r-markdown-document
@@ -539,7 +540,6 @@ Note that mortality rate is calculated based on the latest available  population
 
 
 ```{r print quality table, fig.cap="fig_caption_fixme"}
-library(formattable)
 
 viz_focus = viz_fund_dem_chron %>%
   filter( rural_class      == "rural",
@@ -558,10 +558,10 @@ focus_table = viz_focus %>%
   ) %>% 
   arrange( desc( pct )) %>%
   rename(
-    `Pop Density` = pop12_sqmi,
-    `Median Age` = med_age,
-    `Rent:Own Ratio` = rent_own_ratio,
-    `% Chronic`      = pct,
+    `Pop Density`       = pop12_sqmi,
+    `Median Age`        = med_age,
+    `Rent:Own Ratio`    = rent_own_ratio,
+    `% Chronic`         = pct,
     `HCAI Fund in 2022` = USD_amount
   ) %>%  
   head( 5 ) 
