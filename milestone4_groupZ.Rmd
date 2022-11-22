@@ -528,10 +528,18 @@ have a high median age, and fairly high ratio of renters.
 More importantly, they have one of the highest percentage of chronic diseases mortality,
 and no HCAI fundings that are "In Closure" as of 2022-08-11.
 
+As background reference, across all 58 CA counties, we found these statistics:
+
+ * average population density: 665 person per square mile.
+ * average rent:own ratio is: 64.7%
+ * average age is: 38.5
+
 Note that mortality rate is calculated based on the latest available  population data: 2012.
 
 
+
 ```{r print quality table, fig.cap="fig_caption_fixme"}
+library(formattable)
 
 viz_focus = viz_fund_dem_chron %>%
   filter( rural_class      == "rural",
@@ -540,12 +548,13 @@ viz_focus = viz_fund_dem_chron %>%
           )
 
 focus_table = viz_focus %>%
+  mutate( USD_amount = currency( Numeric_Cost, digits=0L)) %>%
   select( County, 
           pop12_sqmi,
           med_age,
           rent_own_ratio,
           pct,                    # prevalence,         
-          Numeric_Cost, 
+          USD_amount, 
   ) %>% 
   arrange( desc( pct )) %>%
   rename(
@@ -553,15 +562,15 @@ focus_table = viz_focus %>%
     `Median Age` = med_age,
     `Rent:Own Ratio` = rent_own_ratio,
     `% Chronic`      = pct,
-    `HCAI Fund in 2022` = Numeric_Cost
+    `HCAI Fund in 2022` = USD_amount
   ) %>%  
   head( 5 ) 
 
 kable( focus_table,
        format      = "html",
        booktabs    = T,
-       digits      = c(0,1,1,2,2,0),
-       align       = c('lccccc'),
+       digits      = c(0,1,1,2,2,0L),
+       align       = c('lccccr'),
        format.args = list(big.mark=','),
        caption = "Rural Counties with high median age, rental ratio, and chronic disease rate",
        )
@@ -570,7 +579,7 @@ kable( focus_table,
 
 ## Mortality Rate by County
 
-Below is a graph of Mortality Rate for Chronic diseases (as defined by CDC)
+Figure 1 is a bar graph of Mortality Rate for Chronic diseases (as defined by CDC)
 across 11 rural counties (as defined by National Rural Development Partnership)
 The 5 counties of focus have the highest mortality rates in this group.
 
@@ -612,7 +621,7 @@ fig3
 ```
 ## Chronic disease mortality rates vs HCAI funding
 
-The following boxplot summarizes chronic disease mortality rates from all 
+Figure 2: The following boxplot summarizes chronic disease mortality rates from all 
 CA counties, grouped according to HCAI funding amounts for in closure projects 
 as of August 2022. The funding amounts were categorized as "high" if they were 
 above the mean amount, low if they were below the mean, and "no funding" if no 
@@ -646,7 +655,7 @@ plot_ly(
 
 ## Table showing most common disease by rural county
 
-This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available.  As we expand funding in the 5 select counties of focus, special emphasis should be placed on Heart Disease, as that's the most common chronic illness causing high mortality.
+Table 2 shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available.  As we expand funding in the 5 select counties of focus, special emphasis should be placed on Heart Disease, as that's the most common chronic illness causing high mortality.
 *HTD= Heart Disease, CAN= Cancer
 
 ```{r}
