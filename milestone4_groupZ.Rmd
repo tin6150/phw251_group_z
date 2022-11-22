@@ -521,17 +521,17 @@ feel_for_data %>%
 
 ## Rural Counties Deserving More HCAI Funding
 
-Table 1 shows that the 5 counties of Siskiyou, Inyo, Mariposa, Plumas and Modoc
-have low population density (they qualify as Rural per National Rural Development Partnership's definition), 
+Table 1 shows that the 5 counties we selected as deserving more HCAI funding.  
+They are the counties of Siskiyou, Inyo, Mariposa, Plumas and Modoc.
+All these 5 counties have low population density (they qualify as Rural per National Rural Development Partnership's definition), 
 have a high median age, and fairly high ratio of renters.
-More importantly, they have one of the highest percentage of chronic diseases,
+More importantly, they have one of the highest percentage of chronic diseases mortality,
 and no HCAI fundings that are "In Closure" as of 2022-08-11.
 
-Note that the latest population data is from 2012.
+Note that mortality rate is calculated based on the latest available  population data: 2012.
 
 
 ```{r print quality table, fig.cap="fig_caption_fixme"}
-
 
 viz_focus = viz_fund_dem_chron %>%
   filter( rural_class      == "rural",
@@ -542,16 +542,10 @@ viz_focus = viz_fund_dem_chron %>%
 focus_table = viz_focus %>%
   select( County, 
           pop12_sqmi,
-          #rural_class,  
-          #low_pop,
           med_age,
-          #high_med_age,
           rent_own_ratio,
-          #high_rental,
           pct,                    # prevalence,         
           Numeric_Cost, 
-          #fund_per_cap,
-          #`Number of OSHPD Projects`,
   ) %>% 
   arrange( desc( pct )) %>%
   rename(
@@ -564,9 +558,11 @@ focus_table = viz_focus %>%
   head( 5 ) 
 
 kable( focus_table,
-       booktabs=T,
-       digits=c(0,1,1,2,2,0),
-       format.args=list(big.mark=','),
+       format      = "html",
+       booktabs    = T,
+       digits      = c(0,1,1,2,2,0),
+       align       = c('lccccc'),
+       format.args = list(big.mark=','),
        caption = "Rural Counties with high median age, rental ratio, and chronic disease rate",
        )
 
@@ -614,16 +610,15 @@ fig3 = plot_ly( data = chronic_focus_counties ) %>%
 fig3
 
 ```
-## Print Quality Plot or Chart
+## Chronic disease mortality rates vs HCAI funding
 
 The following boxplot summarizes chronic disease mortality rates from all 
 CA counties, grouped according to HCAI funding amounts for in closure projects 
 as of August 2022. The funding amounts were categorized as "high" if they were 
 above the mean amount, low if they were below the mean, and "no funding" if no 
 funding for in closure projects was reported. 
-
-
-(Audrey, so what is graph telling the audience?)
+Variability of mortality rate is highest for counties in the "No funding" category, 
+quality/predictability likely will increase with HCAI funding.  
 
 ```{r}
 
@@ -651,7 +646,8 @@ plot_ly(
 
 ## Table showing most common disease by rural county
 
-This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available. *HTD= Heart Disease, CAN= Cancer
+This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available.  As we expand funding in the 5 select counties of focus, special emphasis should be placed on Heart Disease, as that's the most common chronic illness causing high mortality.
+*HTD= Heart Disease, CAN= Cancer
 
 ```{r}
 table_data_e<- inner_join(rural_not_rural, chronic_mortality_data, by= "County") %>% 
