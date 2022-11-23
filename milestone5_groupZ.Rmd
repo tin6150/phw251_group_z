@@ -1,7 +1,7 @@
 ---
 title: "Milestone 5 Group Z"
 output: html_document
-date: '2022-11-'
+date: '2022-11-22'
 author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho'
 ---
 
@@ -24,6 +24,9 @@ library(kableExtra)
 library(lubridate)
 library(ggplot2)
 library(plotly)
+library(formattable)   # for currency()
+library(DT)
+
 
 # omit warning messages from library load
 # https://stackoverflow.com/questions/45399587/how-to-remove-warning-messages-in-r-markdown-document
@@ -541,6 +544,12 @@ have a high median age, and fairly high ratio of renters.
 More importantly, they have one of the highest percentage of chronic diseases mortality,
 and no HCAI fundings that are "In Closure" as of 2022-08-11.
 
+As background reference, across all 58 CA counties, we found these statistics:
+
+ * average population density: 665 person per square mile.
+ * average rent:own ratio is: 64.7%
+ * average age is: 38.5
+
 Note that mortality rate is calculated based on the latest available  population data: 2012.
 
 
@@ -553,31 +562,42 @@ viz_focus = viz_fund_dem_chron %>%
           )
 
 focus_table = viz_focus %>%
+  mutate( USD_amount = currency( Numeric_Cost, digits=0L)) %>%
   select( County, 
           pop12_sqmi,
           med_age,
           rent_own_ratio,
           pct,                    # prevalence,         
-          Numeric_Cost, 
+          USD_amount, 
   ) %>% 
   arrange( desc( pct )) %>%
   rename(
-    `Pop Density` = pop12_sqmi,
-    `Median Age` = med_age,
-    `Rent:Own Ratio` = rent_own_ratio,
-    `% Chronic`      = pct,
-    `HCAI Fund in 2022` = Numeric_Cost
+    `Pop Density`       = pop12_sqmi,
+    `Median Age`        = med_age,
+    `Rent:Own Ratio`    = rent_own_ratio,
+    `% Chronic`         = pct,
+    `HCAI Fund in 2022` = USD_amount
   ) %>%  
   head( 5 ) 
 
-kable( focus_table,
-       format      = "html",
-       booktabs    = T,
-       digits      = c(0,1,1,2,2,0),
-       align       = c('lccccc'),
-       format.args = list(big.mark=','),
-       caption = "Rural Counties with high median age, rental ratio, and chronic disease rate",
-       )
+# wk 11 reader pdf p6
+datatable( 
+           focus_table,
+           options = list(
+                            order=list(5,'desc'),
+                            columnDefs=list(
+                              list(className='dt-center',targets=1:3)
+                            ),
+                            dom = 't'  # only want the table, nothing else  
+            ),
+            caption = "Rural Counties with high median age, rental ratio, and chronic disease rate",
+            rownames=FALSE,
+          ) %>%
+  formatRound( 2:3, 1 ) %>%
+  formatRound( 4:5, 2 ) %>%
+  formatCurrency( 6, currency="$", digits=0 ) %>%
+  formatStyle(1,color="blue") %>%
+  formatStyle(2:4,backgroundColor = styleInterval(c(500),c('white','yellow')))
 
 ```
 
