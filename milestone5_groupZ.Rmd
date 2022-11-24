@@ -535,12 +535,14 @@ feel_for_data %>%
 
 ## Methods, for each data source
 
-Source
-Years and/or dates of data
-Description of cleaning and creating new variables
-Analytic methods
+```
+  Source
+  Years and/or dates of data
+  Description of cleaning and creating new variables
+  Analytic methods
+```
 
-++ please review that they make sense, and that i didn't omit anything and met the rubric requirements ++
+`++ please review that they make sense, and that i didn't omit anything and met the rubric requirements ++`
 
 We used 3 datasets for this project:
 
@@ -550,14 +552,17 @@ We used 3 datasets for this project:
  
 The first dataset is from the 2012 Census and contains demographics info for each of the 58 counties of California.  It includes info such as population per square mile, median age, number of households who are renters vs owners, ethnicity, genres, etc.   We calculated renter to owner ratio for each county.  Then calculated average age and population density for the whole state and visually inspected the data to see how each county stack up.  We ended up using the National Rural Development Partnership’s definition to determine if a given county's population density is to be classified as rural, for which there were 11.  
 
-The second dataset is the mortality surveillance obtained from the CA Open Data Portal.  It contains a breakdown of total mortality for each county by 15 disease areas.  We used the CDC definition to filter for the chronic diseases, for which 10 fit in this criteria.  The data range from 2014 to 2020, but we were tasked to focus on the last 5 years, thus we applied a filter with Year >= 2016.  As tasked, we also performed filters with Geography_Type == "Occurrence"  and used Strata == "Total Population" to avoid overcounting.  Any missing data were replaced with 0.  Once the data is cleaned, we summed all the disease occurrences within each county.  We joined this with the demographics data to obtain a mortality rate of chronic conditions over 5 years for each county.
+The second dataset is the mortality surveillance obtained from the CA Open Data Portal.  It contains a breakdown of total mortality for each county by 15 disease areas.  We used the CDC definition to filter for the chronic diseases, for which 10 fit in this criteria.  The data range from 2014 to 2020, but we were tasked to focus on the last 5 years, thus we applied a filter with `Year >= 2016`.  As tasked, we also performed filters with `Geography_Type == "Occurrence"`  and used `Strata == "Total Population"` to avoid over counting.  Any missing data were replaced with 0.  Once the data is cleaned, we summed all the disease occurrences within each county.  We joined this with the demographics data to obtain a mortality rate of chronic conditions over 5 years for each county.
 
 The third dataset is the HCAI funding, also obtained from the CA Open Data Portal.  It contains healthcare spending for each county in 4 stages of project progression, updated about every 2 weeks.  We focused on the latest available data, which was Aug 11, 2022, and those with state of "In Closure".  Many rural counties showed up with $0 amount, and we went back to double check our selection code.  It checked out, much fundings are in large populous counties such as LA and Alameda.  It was not that rural counties had no funding, there were fundings for example in the "In Construction" phase, but we decided to focus on "In Closure" to help our improvement plan to drive new spending for rural counties with high and variable mortality rates.
 
-After cleaning and filtering the 3 dataset above, we joined them by county name, whereby we can see which counties has high renters, high chronic mortality rates, and the funding they receive.  
+After cleaning and filtering the 3 datasets above, we joined them by county name, whereby we can see which counties has high renters, high chronic mortality rates, and the funding they receive.  
 
 ## Results 
 
+`++TEMP NOTE++`
+`I (Tin) change filter from Year>2016 to Year>=2016 to have a proper 5 year bracket, `
+`results not significatly different than Milestone 4`
 
 
 ## Rural counties with high median age and renter to owner ratio 
@@ -565,7 +570,7 @@ After cleaning and filtering the 3 dataset above, we joined them by county name,
 
 Table 1 shows CA counties that are rural
 (per National Rural Development Partnership's definition), 
-and have meadian age greter than the state-wide average.
+and have median age grater than the state-wide average.
 
 We have pre-sorted them by decreasing renter to owner ratio.  We observe that while none of these counties have rent:owner ratio higher than the state-wide average, they are still fairly high; and they have $0 in the latest HCAI funding that are in the Closure state.
 
@@ -680,7 +685,7 @@ as of August 2022. The funding amounts were categorized as "high" if they were
 above the mean amount, low if they were below the mean, and "no funding" if no 
 funding for in closure projects was reported. 
  
-(Please describe how this graph help with our narrative on the 5 counties selected)
+`(++Please describe how this graph help with our narrative on the 5 counties selected++)`
 
 ```{r, echo=F, include=T}
 
@@ -771,7 +776,7 @@ fig_hcai_all
 Maximum of 1,000 words
 
 
-++ please improve on this ++
+`++ please improve on this ++`
 
 
 We tried to see if there were any counties that satisfy all 3 criterias of:
@@ -792,7 +797,7 @@ Then, in Figure 2, we ranked the 11 rural California counties by decreasing chro
 We found that the top 5 counties of Siskiyou, Inyo, Marioposa, Plumas and Modoc were also found to be top counties in the high median age and large renter to owner ratio in Table 1 above.  
 
 
-++ please expand, what the other visuals says, etc ++
+`++ please expand, what the other visuals says, etc ++`
 
 
 
