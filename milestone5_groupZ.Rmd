@@ -561,7 +561,7 @@ After cleaning and filtering the 3 datasets above, we joined them by county name
 ## Results 
 
 `++TEMP NOTE++`
-`I (Tin) change filter from Year>2016 to Year>=2016 to have a proper 5 year bracket, `
+`I (Tin) change filter from Year>2016 to Year>=2016 to have a proper 5 year bracket,`
 `results not significatly different than Milestone 4`
 
 
