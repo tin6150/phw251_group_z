@@ -581,8 +581,7 @@ Note that mortality rate is calculated based on the latest available  population
 
 ```{r print quality table, echo=F, include=T }
 
-grey_blue = "rgb(187, 216, 228)"
-
+grey_blue = "rgb(187, 216, 228)"  # custom color from lecture material
 
 viz_focus = viz_fund_dem_chron %>%
   filter( rural_class      == "rural",
@@ -599,26 +598,22 @@ focus_table = viz_focus %>%
           pct,                    # prevalence,         
           USD_amount, 
   ) %>% 
-  mutate( highliteCounty = case_when(
-    County %in% selected_counties ~ TRUE, 
-    TRUE                          ~ FALSE
-  ) ) %>%
   arrange( desc( rent_own_ratio )) %>%
   rename(
-    `Pop Density`       = pop12_sqmi,
-    `Median Age`        = med_age,
-    `Rent:Own Ratio`    = rent_own_ratio,
-    `% Chronic`         = pct,
-    `HCAI Fund in 2022` = USD_amount
-  ) #%>%    head( 5 ) 
+    `Pop Density`          = pop12_sqmi,
+    `Median Age`           = med_age,
+    `Rent:Own Ratio`       = rent_own_ratio,
+    `% Chronic Mortality`  = pct,
+    `HCAI Fund in 2022`    = USD_amount
+  ) 
 
 # DT wk 11 reader pdf p6
 datatable( 
            focus_table,
            options = list(
-                            order=list(5,'desc'),
+                            #order=list(4,'desc'),  ## arrange() above dictated order
                             columnDefs=list(
-                              list(className='dt-center',targets=1:3)
+                                list(className='dt-center',targets=1:4) # col to center
                             ),
                             dom = 't'  # only want the table, nothing else  
             ),
@@ -628,10 +623,9 @@ datatable(
   formatRound( 2:3, 1 ) %>%
   formatRound( 4:5, 2 ) %>%
   formatCurrency( 6, currency="$", digits=0 ) %>%
-  #formatStyle(1,color="blue") %>%
-  formatStyle(3,backgroundColor = styleInterval(c(avg_age),c('white',grey_blue))) %>%  # highlite = older than state avg
+  formatStyle(3,backgroundColor = styleInterval(c(avg_age),              c('white',grey_blue))) %>%  # highlite = older than state avg
   formatStyle(5,backgroundColor = styleInterval(c(avg_chronic_mortality),c('white',grey_blue))) %>%  # highlite = higher chronic mortality than state avg
-  formatStyle(4,backgroundColor = styleInterval(c(avg_rent_ratio),c('white',grey_blue)))   # highlite if rental ratio > state avg, none in here fit this criteria
+  formatStyle(4,backgroundColor = styleInterval(c(avg_rent_ratio),       c('white',grey_blue)))      # highlite = rental ratio > state avg, none in here fit this criteria
 
 ```
 
@@ -664,13 +658,13 @@ fig_mortality = plot_ly( data = chronic_focus_counties ) %>%
     add_trace(
             x = ~County,
             y = ~pct,
-            name = 'Fig 1: Chronic Mortality Rates by Counties',
+            #name = 'Fig 1: Chronic Mortality Rates by Counties',
             marker = list(color = ~ctyColor),
             hoverinfo = "text",
             text = ~paste(round(pct, 1), "%" ),  
             type = 'bar') %>%
    layout(
-            title = "Chronic Mortality Rates For California's Rural Counties", 
+            title = "Fig 1: Chronic Mortality Rates For California's Rural Counties", 
             yaxis = list( title="% Mortality Rate"),
             xaxis = list( title="County", categoryorder='total descending' )
          )
@@ -731,10 +725,11 @@ digits=0, booktabs=T, escape=F, align="ccc", caption="Most Common Chronic Diseas
 common_chronic
 ```
 
-
-```{r viz: funding for select counties, include=F, echo=TRUE }
-
 # This was left out in Milestone 4, probably no need for it here either.
+
+
+```{r viz: funding for select counties, echo=F, include=T }
+
 
 # HCAI Funding for all 58 counties
 
