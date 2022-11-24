@@ -1,9 +1,11 @@
 ---
-title: "Milestone 5 Group Z"
+title: "**DRAFT** Milestone 5 Group Z **DRAFT** "
 output: html_document
-date: '2022-11-22'
+date: '2022-11-23'
 author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho'
 ---
+
+**DRAFT**  **DRAFT**  **DRAFT** 
 
 # Web access to knitted HTML output
 
@@ -60,6 +62,10 @@ mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
 mortality_data %>% select( Year ) %>% unique()
 # Mortality data is from 2014 - 2020.
 
+mortality_data %>% select( "Cause_Desc" ) %>% unique() %>% tally()
+# contain 15 diseases, but one is "All causes (total)"
+
+
 # subset mortality data for chronic conditions only
 
 chronic_desc = c( 
@@ -74,6 +80,8 @@ chronic_desc = c(
   "Cerebrovascular diseases",
   "Parkinson's disease"
   )
+
+str( chronic_desc )
 
 chronic_mortality_data = mortality_data %>% 
   filter( Cause_Desc %in% chronic_desc )
@@ -99,7 +107,7 @@ chronic_by_county = chronic_mortality_data %>%
   filter(  Strata == "Total Population") %>%
   filter(  Geography_Type == "Occurrence" ) %>%
   select( -Geography_Type ) %>% # Geo type restricted to "Occurrence"
-  filter( Year > 2016 )     %>%   # 2016-2020 = 5 years
+  filter( Year >= 2016 )     %>%   # 2016-2020 = 5 years
   group_by( County ) %>%
   summarize( sum_count = sum(Count) )
 
@@ -519,23 +527,67 @@ feel_for_data %>%
 
 ## Problem Statement (1-2 paragraphs)
 
+
+++ Aubrey  will write this?
+
 ## Methods, for each data source
+
 Source
 Years and/or dates of data
 Description of cleaning and creating new variables
 Analytic methods
 
+++ please review that they make sense, and that i didn't omit anything and met the rubric requirements ++
+
+We used 3 datasets for this project:
+
+ * CA demographics 
+ * CA mortality surveillance
+ * HCAI healthcare construction funding
+ 
+The first dataset is from the 2012 Census and contains demographics info for each of the 58 counties of California.  It includes info such as population per square mile, median age, number of households who are renters vs owners, ethnicity, genres, etc.   We calculated renter to owner ratio for each county.  Then calculated average age and population density for the whole state and visually inspected the data to see how each county stack up.  We ended up using the National Rural Development Partnership’s definition to determine if a given county's population density is to be classified as rural, for which there were 11.  
+
+The second dataset is the mortality surveillance obtained from the CA Open Data Portal.  It contains a breakdown of total mortality for each county by 15 disease areas.  We used the CDC definition to filter for the chronic diseases, for which 10 fit in this criteria.  The data range from 2014 to 2020, but we were tasked to focus on the last 5 years, thus we applied a filter with Year >= 2016.  As tasked, we also performed filters with Geography_Type == "Occurrence"  and used Strata == "Total Population" to avoid overcounting.  Any missing data were replaced with 0.  Once the data is cleaned, we summed all the disease occurrences within each county.  We joined this with the demographics data to obtain a mortality rate of chronic conditions over 5 years for each county.
+
+The third dataset is the HCAI funding, also obtained from the CA Open Data Portal.  It contains healthcare spending for each county in 4 stages of project progression, updated about every 2 weeks.  We focused on the latest available data, which was Aug 11, 2022, and those with state of "In Closure".  Many rural counties showed up with $0 amount, and we went back to double check our selection code.  It checked out, much fundings are in large populous counties such as LA and Alameda.  It was not that rural counties had no funding, there were fundings for example in the "In Construction" phase, but we decided to focus on "In Closure" to help our improvement plan to drive new spending for rural counties with high and variable mortality rates.
+
+After cleaning and filtering the 3 dataset above, we joined them by county name, whereby we can see which counties has high renters, high chronic mortality rates, and the funding they receive.  
+
 ## Results 
 
-## Discussion (interpretation of results)
-
-Maximum of 1,000 words
+++ please improve on this ++
 
 
+(should this go here?  or in Discussion?)
+We tried to see if there were any counties that satisfy all 3 criterias of:
+
+ * Rural by National Rural Development Parthnership's definition.
+ * High rental rate (higher than state-wide average)
+ * High median age (higher than state-wide average)
+
+But this resulted in 0 county.  As such, our selection criteria were relaxed the selection by removing the 
+
+  rental rate > state average.
+
+From this, we got a list with 8 counties.  We ranked these by renter:owner ratio, and obtained our list of 5 counties to focus: Inyo, Siskiyou, Mariposa, Modoc and Plumas.
+
+When we plotted Mortality Rate for each of the 11 rural counties, we see what our 5 counties selection have the highest rate.  
+
+++ please expand ++
+
+we observe that this list of 8 counties, all had a zero dollar amount for the HCAI funding at the "In Closure" state.
+
+Below ... 
+
+++ please expand ++
 
 
 
 ## Rural Counties Deserving More HCAI Funding
+
+
+++ TIN FIX TBD ... i changed it a bit here from Milestone 4, now show 8 counties, 
+will find way to highlight them or something ++
 
 Table 1 shows that the 5 counties we selected as deserving more HCAI funding.  
 They are the counties of Siskiyou, Inyo, Mariposa, Plumas and Modoc.
@@ -577,10 +629,9 @@ focus_table = viz_focus %>%
     `Rent:Own Ratio`    = rent_own_ratio,
     `% Chronic`         = pct,
     `HCAI Fund in 2022` = USD_amount
-  ) %>%  
-  head( 5 ) 
+  ) #%>%    head( 5 ) 
 
-# wk 11 reader pdf p6
+# DT wk 11 reader pdf p6
 datatable( 
            focus_table,
            options = list(
@@ -735,3 +786,10 @@ fig2
 
 
 ```
+
+
+## Discussion (interpretation of results)
+
+Maximum of 1,000 words
+
+++ Who will write this?
