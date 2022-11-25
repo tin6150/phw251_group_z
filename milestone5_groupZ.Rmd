@@ -27,7 +27,7 @@ library(lubridate)
 library(ggplot2)
 library(plotly)
 library(formattable)   # for currency()
-library(DT)
+library(DT)            # and NOT data.table
 
 
 # omit warning messages from library load
@@ -170,12 +170,7 @@ funding_data_closure <- funding_data %>%
   filter(`OSHPD Project Status` == "In Closure") %>%
   filter(`Data Generation Date` == as_date("2022-08-11")  )
 
-  ## 2022-08-11 the latest avail data
-
-    #group_by(County, Numeric_Cost, `OSHPD Project Status`) %>%  
-  ## I (Tin) can no longer get the the gruop_by  to work... 
-
-
+  ## 2022-08-11 is the latest avail data
 
 ```
 
@@ -554,14 +549,14 @@ The first dataset is from the 2012 Census and contains demographics info for eac
 
 The second dataset is the mortality surveillance obtained from the CA Open Data Portal.  It contains a breakdown of total mortality for each county by 15 disease areas.  We used the CDC definition to filter for the chronic diseases, for which 10 fit in this criteria.  The data range from 2014 to 2020, but we were tasked to focus on the last 5 years, thus we applied a filter with `Year >= 2016`.  As tasked, we also performed filters with `Geography_Type == "Occurrence"`  and used `Strata == "Total Population"` to avoid over counting.  Any missing data were replaced with 0.  Once the data is cleaned, we summed all the disease occurrences within each county.  We joined this with the demographics data to obtain a mortality rate of chronic conditions over 5 years for each county.
 
-The third dataset is the HCAI funding, also obtained from the CA Open Data Portal.  It contains healthcare spending for each county in 4 stages of project progression, updated about every 2 weeks.  We focused on the latest available data, which was Aug 11, 2022, and those with state of "In Closure".  Many rural counties showed up with $0 amount, and we went back to double check our selection code.  It checked out, much fundings are in large populous counties such as LA and Alameda.  It was not that rural counties had no funding, there were fundings for example in the "In Construction" phase, but we decided to focus on "In Closure" to help our improvement plan to drive new spending for rural counties with high and variable mortality rates.
+The third dataset is the HCAI funding, also obtained from the CA Open Data Portal.  It contains healthcare spending for each county in 4 stages of project progression, updated about every 2 weeks.  We focused on the latest available data, which was Aug 11, 2022, and those with state of "In Closure".  Many rural counties showed up with $0 amount, and we went back to double check our selection code.  It checked out, much fundings are in large populous counties such as those around the greater Los Angeles and San Francisco.  It was not that rural counties had no funding, there were fundings for example in the "In Construction" phase, but we decided to focus on "In Closure" to help our improvement plan to drive new spending for rural counties with high and variable mortality rates.
 
 After cleaning and filtering the 3 datasets above, we joined them by county name, whereby we can see which counties has high renters, high chronic mortality rates, and the funding they receive.  
 
 ## Results 
 
 `++TEMP NOTE++`
-`I (Tin) change filter from Year>2016 to Year>=2016 to have a proper 5 year bracket,`
+`I (Tin) changed filter from Year>2016 to Year>=2016 to have a proper 5 year bracket,`
 `results not significatly different than Milestone 4`
 
 
@@ -751,13 +746,17 @@ counties_funding_comp = funding_data %>%
 #fig2 = plot_ly( data = funding_data_1county ) %>%
 #fig2 = plot_ly( data = funding_data_selected_counties ) %>%
 fig_hcai_all = plot_ly( data = counties_funding_comp ) %>%
-  add_trace(x = ~`County`,
+  add_trace(x = ~County,
             y = ~Numeric_Cost,
             type = 'bar',
             name = 'Funding across 58 counties',
             marker = list(color = 'rgb(187, 216, 228)'),
             hoverinfo = "text",
-            text = ~paste(round(Numeric_Cost, 0), ' US$')  ) %>%
+            text = ~paste(
+              County,
+              'US$', 
+              round(Numeric_Cost, 0) 
+              )  ) %>%
    layout(
             title="Funding across 58 counties",
             yaxis = list( title="Funding"),
