@@ -547,6 +547,7 @@ We used 3 datasets for this project:
  
 The first dataset is from the 2012 Census and contains demographics info for each of the 58 counties of California.  It includes info such as population per square mile, median age, number of households who are renters vs owners, ethnicity, genres, etc.   We calculated renter to owner ratio for each county.  Then calculated average age and population density for the whole state and visually inspected the data to see how each county stack up.  We ended up using the National Rural Development Partnership’s definition to determine if a given county's population density is to be classified as rural, for which there were 11.  
 
+
 The second dataset is the mortality surveillance obtained from the CA Open Data Portal.  It contains a breakdown of total mortality for each county by 15 disease areas.  We used the CDC definition to filter for the chronic diseases, for which 10 fit in this criteria.  The data range from 2014 to 2020, but we were tasked to focus on the last 5 years, thus we applied a filter with `Year >= 2016`.  As tasked, we also performed filters with `Geography_Type == "Occurrence"`  and used `Strata == "Total Population"` to avoid over counting.  Any missing data were replaced with 0.  Once the data is cleaned, we summed all the disease occurrences within each county.  We joined this with the demographics data to obtain a mortality rate of chronic conditions over 5 years for each county.
 
 The third dataset is the HCAI funding, also obtained from the CA Open Data Portal.  It contains healthcare spending for each county in 4 stages of project progression, updated about every 2 weeks.  We focused on the latest available data, which was Aug 11, 2022, and those with state of "In Closure".  Many rural counties showed up with $0 amount, and we went back to double check our selection code.  It checked out, much fundings are in large populous counties such as those around the greater Los Angeles and San Francisco.  It was not that rural counties had no funding, there were fundings for example in the "In Construction" phase, but we decided to focus on "In Closure" to help our improvement plan to drive new spending for rural counties with high and variable mortality rates.
@@ -672,38 +673,55 @@ fig_mortality = plot_ly( data = chronic_focus_counties ) %>%
 fig_mortality
 
 ```
-## Chronic disease mortality rates vs HCAI funding
+## Demographics and Funding of Rural Counties
 
-The following boxplot summarizes chronic disease mortality rates from all 
-CA counties, grouped according to HCAI funding amounts for in closure projects 
-as of August 2022. The funding amounts were categorized as "high" if they were 
-above the mean amount, low if they were below the mean, and "no funding" if no 
-funding for in closure projects was reported. 
- 
-`(++Please describe how this graph help with our narrative on the 5 counties selected++)`
+The following line charts display characteristics of interest in more detail for
+rural counties. For each county, the first two subplots depict median age 
+and rent:own ratio, respectively. The third subplot depicts the funding amount 
+each county received on projects with a status of "in construction" as of August 
+2022. We wanted to explore this variable in addition to funding for projects 
+in closure as it's an important factor in deciding who needs funding most 
+urgently. 
 
 ```{r, echo=F, include=T}
 
-funding_chronic <- funding_data %>% 
-  filter( `OSHPD Project Status` == "In Closure") %>%
+rural_counties_funding <- funding_data %>% 
+  filter( `OSHPD Project Status` == "In Construction") %>%
   filter( `Data Generation Date` == as_date( "2022-08-11")) %>%
-  mutate(funding_amount = case_when(
-    Numeric_Cost > 12239849 ~ "High Funding", 
-    Numeric_Cost == 0 ~ "No Funding", 
-    Numeric_Cost < 12239849 ~ "Low Funding"
-  )) %>%
-  inner_join(demographics_chronic, funding_data_all_counties, by = "County") %>%
-  select(pct, County, funding_amount, rural_class, Numeric_Cost)
+  inner_join(viz_focus, rural_counties_funding, by = "County")
 
-plot_ly(
-  funding_chronic,
-  y=~pct,
-  color= ~funding_amount,
-  type="box"
-) %>%
-   layout(
-    title="Chronic Disease Mortality Rates & HCAI Funding",
-    yaxis=list(title="Chronic Disease Rate"))
+
+MedianAgePlot <- plot_ly(rural_counties_funding,
+                 x=~County,
+                  y=~`med_age`,
+                  name="Median Age",
+                  type="scatter")
+
+RentPlot <- plot_ly(rural_counties_funding,
+                 x=~County,
+                  y=~`rent_own_ratio`,
+                  name="Rent:Own Ratio",
+                  type="scatter")
+
+Funding_Construction_Plot <- plot_ly(rural_counties_funding,
+                 x=~County,
+                  y=~`Numeric_Cost.x`,
+                  name="HCAI Funding for Projects In Construction August 2022",
+                  type="scatter")
+
+print(MedianAgePlot)
+print(RentPlot)
+print(Funding_Construction_Plot)
+
+subplot(MedianAgePlot, RentPlot, Funding_Construction_Plot, shareY=F) %>%
+  layout(title = "Fig 2: Age, Rent, & Funding Characteristics of Rural Counties",
+         legend = list(orientation = "h", xanchor= "center", x = .5, y = -.5),
+         xaxis = list( title="County", categoryorder='total ascending'),
+         xaxis2= list(title="County", categoryorder='total ascending'), 
+         xaxis3= list(title="County", categoryorder='total ascending'),
+         yaxis = list(title = "Median Age"),
+         yaxis2 = list(title = "Rent:Own Ratio"), 
+         yaxis3 = list(title = "Funding($)"))
 ```
 
 ## Table showing most common disease by rural county
@@ -796,6 +814,7 @@ Then, in Figure 2, we ranked the 11 rural California counties by decreasing chro
 We found that the top 5 counties of Siskiyou, Inyo, Marioposa, Plumas and Modoc were also found to be top counties in the high median age and large renter to owner ratio in Table 1 above.  
 
 
+
 `++ please expand, what the other visuals says, etc ++`
 
 
@@ -803,5 +822,35 @@ We found that the top 5 counties of Siskiyou, Inyo, Marioposa, Plumas and Modoc 
 In conclusion, we recommends that the 5 counties of Siskiyou, Inyo, Marioposa, Plumas and Modoc get priority funding for the next round of projects.  
 
 
+#Aubreys original plot from milestone 4 -- dont't feel like it adds much info.
+# placing here just in case you all feel differently
+The following boxplot summarizes chronic disease mortality rates from all 
+CA counties, grouped according to HCAI funding amounts for in closure projects 
+as of August 2022. The funding amounts were categorized as "high" if they were 
+above the mean amount, low if they were below the mean, and "no funding" if no 
+funding for in closure projects was reported. 
 
+```{r}
+
+funding_chronic <- funding_data %>% 
+  filter( `OSHPD Project Status` == "In Closure") %>%
+  filter( `Data Generation Date` == as_date( "2022-08-11")) %>%
+  mutate(funding_amount = case_when(
+    Numeric_Cost > 12239849 ~ "High Funding", 
+    Numeric_Cost == 0 ~ "No Funding", 
+    Numeric_Cost < 12239849 ~ "Low Funding"
+  )) %>%
+  inner_join(demographics_chronic, funding_data_all_counties, by = "County") %>%
+  select(pct, County, funding_amount, rural_class, Numeric_Cost)
+
+plot_ly(
+  funding_chronic,
+  y=~pct,
+  color= ~funding_amount,
+  type="scatter"
+) %>%
+   layout(
+    title="Chronic Disease Mortality Rates & HCAI Funding",
+    yaxis=list(title="Chronic Disease Rate"))
+```
 
