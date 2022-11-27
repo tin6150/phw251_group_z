@@ -571,7 +571,7 @@ After cleaning and filtering the 3 datasets above, we joined them by county name
 
 Table 1 shows CA counties that are rural
 (per National Rural Development Partnership's definition), 
-and have median age grater than the state-wide average.
+and have median age greater than the state-wide average.
 
 We have pre-sorted them by decreasing renter to owner ratio.  We observe that while none of these counties have rent:owner ratio higher than the state-wide average, they are still fairly high; and they have $0 in the latest HCAI funding that are in the Closure state.
 
@@ -635,52 +635,9 @@ datatable(
 
 ```
 
-## Mortality Rate by County
-
-Figure 1 is a bar graph of Mortality Rate for Chronic diseases (as defined by CDC)
-across the 11 rural counties in CA (as defined by National Rural Development Partnership)
-
-The list for Chronic disease is selected according to CDC definition.  
-We note that we don't have disease data for Alpine or Sierra county.  
-
-```{r viz: chronic mortality rates by counties, echo=F, include=T}
-
-
-chronic_focus_counties = inner_join(
-    demographics_chronic,
-    rural_counties,
-    by = "County"                   ) %>%
-  mutate( ctyColor = case_when(
-    County == "Siskiyou" ~ "red", 
-    County == "Inyo"     ~ "darkorange" , 
-    County == "Mariposa" ~ "blue", 
-    County == "Plumas"   ~ "darkblue",
-    County == "Modoc"    ~ "darkcyan",
-    TRUE                 ~ grey_blue     # "rgb(187, 216, 228)"
-  ) )
-
-
-fig_mortality = plot_ly( data = chronic_focus_counties ) %>%
-    add_trace(
-            x = ~County,
-            y = ~pct,
-            #name = 'Fig 1: Chronic Mortality Rates by Counties',
-            marker = list(color = ~ctyColor),
-            hoverinfo = "text",
-            text = ~paste(round(pct, 1), "%" ),  
-            type = 'bar') %>%
-   layout(
-            title = "Fig 1: Chronic Mortality Rates For California's Rural Counties", 
-            yaxis = list( title="% Mortality Rate"),
-            xaxis = list( title="County", categoryorder='total descending' )
-         )
-
-fig_mortality
-
-```
 ## Demographics and Funding of Rural Counties
 
-The following line charts display characteristics of interest in more detail for
+Figure 1 displays a few of the characteristics of interest in more detail for
 rural counties. For each county, the first two subplots depict median age 
 and rent:own ratio, respectively. The third subplot depicts the funding amount 
 each county received on projects with a status of "in construction" as of August 
@@ -689,7 +646,6 @@ in closure as it's an important factor in deciding who needs funding most
 urgently. 
 
 ```{r, echo=F, include=T}
-
 rural_counties_funding <- funding_data %>% 
   filter( `OSHPD Project Status` == "In Construction") %>%
   filter( `Data Generation Date` == as_date( "2022-08-11")) %>%
@@ -719,7 +675,7 @@ print(RentPlot)
 print(Funding_Construction_Plot)
 
 subplot(MedianAgePlot, RentPlot, Funding_Construction_Plot, shareY=F) %>%
-  layout(title = "Fig 2: Age, Rent, & Funding Characteristics of Rural Counties",
+  layout(title = "Fig 1: Age, Rent, & Funding Characteristics of Rural Counties",
          legend = list(orientation = "h", xanchor= "center", x = .5, y = -.5),
          xaxis = list( title="County", categoryorder='total ascending'),
          xaxis2= list(title="County", categoryorder='total ascending'), 
@@ -728,6 +684,53 @@ subplot(MedianAgePlot, RentPlot, Funding_Construction_Plot, shareY=F) %>%
          yaxis2 = list(title = "Rent:Own Ratio"), 
          yaxis3 = list(title = "Funding($)"))
 ```
+
+
+
+## Mortality Rate by County
+
+Figure 2 is a bar graph of Mortality Rate for Chronic diseases (as defined by CDC)
+across the 11 rural counties in CA (as defined by National Rural Development Partnership)
+
+The list for Chronic disease is selected according to CDC definition.  
+We note that we don't have disease data for Alpine or Sierra county.  
+
+```{r viz: chronic mortality rates by counties, echo=F, include=T}
+
+
+chronic_focus_counties = inner_join(
+    demographics_chronic,
+    rural_counties,
+    by = "County"                   ) %>%
+  mutate( ctyColor = case_when(
+    County == "Siskiyou" ~ "red", 
+    County == "Inyo"     ~ "darkorange" , 
+    County == "Mariposa" ~ "blue", 
+    County == "Plumas"   ~ "darkblue",
+    County == "Modoc"    ~ "darkcyan",
+    TRUE                 ~ grey_blue     # "rgb(187, 216, 228)"
+  ) )
+
+
+fig_mortality = plot_ly( data = chronic_focus_counties ) %>%
+    add_trace(
+            x = ~County,
+            y = ~pct,
+            #name = 'Fig 2: Chronic Mortality Rates by Counties',
+            marker = list(color = ~ctyColor),
+            hoverinfo = "text",
+            text = ~paste(round(pct, 1), "%" ),  
+            type = 'bar') %>%
+   layout(
+            title = "Fig 1: Chronic Mortality Rates For California's Rural Counties", 
+            yaxis = list( title="% Mortality Rate"),
+            xaxis = list( title="County", categoryorder='total descending' )
+         )
+
+fig_mortality
+
+```
+
 
 ## Table showing most common disease by rural county
 
@@ -797,30 +800,21 @@ Maximum of 1,000 words
 `++ please improve on this ++`
 
 
-We tried to see if there were any counties that satisfy all 3 criterias of:
+While no county perfectly fit all three attributes of rural, high rental rate,
+and high median age rate, our visualizations and analysis offer a holistic view of which counties best fit the selection criteria. Our first step narrowed down which counties are "rural" as defined by the National Rural Development Partnership, and had a median age higher than the state-wide average. These 8 counties are depicted in Table 1, which includes data on the other selection criteria. Here we see that none of these rural counties have HCAI funding for projects with an "In Closure" status for August 2022.
 
- * Rural by National Rural Development Parthnership's definition.
- * High rental rate (higher than state-wide average)
- * High median age (higher than state-wide average)
+Figure 1 provides a visual display of demographics and funding in rural counties. Most notable is 
+that the third subplot displays funding received for projects "In Construction" as of August 2022.
+While all of these had a zero dollar amount in projects with "In Closure" status, both Inyo and Siskiyou reported funding of "In Construction" projects over $4 million. Counties that reported zero dollar amounts in both categories include Alpine, Mariposa, Modoc, and Sierra. Sierra additonally has the highest median age. Across all subplots in figure 1, we find three rural counties of particular interest: Mariposa, Modoc, and Plumas. 
 
-But this resulted in 0 county.  As such, our selection criteria were relaxed the selection by removing the 
+Figure 2 ranks the 11 rural California counties by decreasing chronic mortality rate.
+The 5 counties with the highest mortality rate include Siskiyou, Inyo, Mariposa, 
+Plumas and Modoc. These counties align with those found to have high median age and large renter to owner ratio in Table 1 above. Figure 2 also helps us narrow down our selection because, while Alpine and Sierra have not recently received funding, they have the lowest mortality rates. Although in Figure 1 Inyo and Siskiyou have received funding, their mortality rates are quite high, indicating that a higher need for funding.
 
-  rental rate > state average.
-
-From this, we got a list with 8 counties in Table 1, which warrant our attention for further intervention.
-we observe that this list of 8 counties, all had a zero dollar amount for the HCAI funding at the "In Closure" state.
-
-
-Then, in Figure 2, we ranked the 11 rural California counties by decreasing chronic mortality rate.
-We found that the top 5 counties of Siskiyou, Inyo, Marioposa, Plumas and Modoc were also found to be top counties in the high median age and large renter to owner ratio in Table 1 above.  
-
-
+Ultimately, our analysis identfied Inyo, Siskiyou, Mariposa, Modoc, and Plumas counties to receive HCAI Funding. 
 
 `++ please expand, what the other visuals says, etc ++`
 
-
-
-In conclusion, we recommends that the 5 counties of Siskiyou, Inyo, Marioposa, Plumas and Modoc get priority funding for the next round of projects.  
 
 
 #Aubreys original plot from milestone 4 -- dont't feel like it adds much info.
