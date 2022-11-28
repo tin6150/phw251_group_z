@@ -763,27 +763,37 @@ chronic_focus_counties = inner_join(
     County == "Plumas"   ~ "darkblue",
     County == "Modoc"    ~ "darkcyan",
     TRUE                 ~ grey_blue     # "rgb(187, 216, 228)"
-  ) )
+  ) ) 
 
 
 fig_mortality = plot_ly( 
-  data = chronic_focus_counties ,
-            x = ~County,
-            y = ~per100k
-  
+  data   = chronic_focus_counties ,
+  type   = 'bar',                    
+  marker = list(color = grey_blue),
+  showlegend = F,
+  text   = ~paste(round(per100k, 0) ),
+              x = ~County,
+              y = ~per100k
   ) %>%
-    add_trace(
-            #name = 'Fig 2: Chronic Mortality Rates by Counties',
-            marker = list(color = ~ctyColor),
+  
+add_trace(
+            name = 'Fig 2: Chronic Mortality Rates by Counties',
+            marker = list(color = "Blue"),
+            #marker = list(color = ~ctyColor),
+            text = ~paste("Total Average Yearly Cases:",   avg_count, 
+                          "<BR>2012 Population: ",         pop2012, 
+                          "<BR>Mortality Rate per 100k: ", round(per100k, 0)  )  ,
             hoverinfo = "text",
-            #text = ~paste(round(per100k, ), "%" ),
-            text = ~paste("Total Cases:", avg_count, "2012 Population: ", pop2012, "Mortality Rate: ", round(per100k, 1)  ),  
-            type = 'bar') %>%
+            #text = ~paste(round(per100k, 0) ),
+      
+            type = 'scatter'
+            ) %>%
    layout(
             title = "Fig 2: Chronic Mortality Rates For California's Rural Counties", 
             yaxis = list( title="Mortality Rate per population of 100k"),
             xaxis = list( title="County", categoryorder='total descending' )
          )
+
 
 fig_mortality
 
