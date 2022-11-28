@@ -463,14 +463,20 @@ focus_dem %>% head( 13 )
 # First need to Join Chronics mortality data (by county, last 5 years)
 # and demographics data
 
+# @Lauren, 
+# here is where mortality rate  calculated
+# There is also a spot check around Line 510 
+
 demographics_chronic = left_join( demographics_data, 
                                   chronic_by_county, 
                                   by = "County"      ) %>% 
-  mutate( pct = ( sum_count / pop2012 ) * 100 )
+  mutate( pct     = ( sum_count / pop2012 ) * 100 ) %>%
+  mutate( per100k = ( sum_count / pop2012 ) * 100000 ) 
 
 # pct = "prevalence" percentage
 
-avg_chronic_mortality = mean( demographics_chronic$pct )
+avg_chronic_mortality         = mean( demographics_chronic$pct )
+avg_chronic_mortality_per100k = mean( demographics_chronic$per100k )
 
 ```
 
@@ -486,6 +492,7 @@ fund_dem_chron = inner_join( demographics_chronic,
 
 viz_fund_dem_chron = fund_dem_chron %>%
   select( County, 
+          pop2012,
           pop12_sqmi,
           rural_class,  
           #low_pop,
@@ -493,7 +500,9 @@ viz_fund_dem_chron = fund_dem_chron %>%
           high_med_age,
           rent_own_ratio,
           high_rental,
+          sum_count,
           pct,                    # prevalence,         
+          per100k,                # prevalence,  per 100k pop
           Numeric_Cost, 
           fund_per_cap,
           `Number of OSHPD Projects`,
@@ -502,9 +511,43 @@ viz_fund_dem_chron = fund_dem_chron %>%
 ```
 
 
+```{r spot_check_mortality, echo=FALSE, include=FALSE }
+
+# viz_fund_dem_chron is just fund_dem_chron with fewer columns
+
+scm1 = viz_fund_dem_chron %>% 
+  filter( County == "Siskiyou" )
+
+chronic_by_county %>% 
+  filter( County == "Siskiyou" )
+
+
+scm2 = demographics_chronic %>%
+  filter( County == "Siskiyou" )
+
+# Spot check for Mortality rate of Siskiyou 
+#pop12      for siskiyou is 45200
+#sum_count  for siskiyou is  1614
+# as fraction is .03517  (ie 3.6%)
+# as per 100,000 then 1614*100000/45200 = 3570.796
+
+
+# this where mortality rate was calc (as pct)
+#demographics_chronic = left_join( demographics_data,
+#                                  chronic_by_county,
+#                                  by = "County"      ) %>%
+#  mutate( pct = ( sum_count / pop2012 ) * 100 )
+
+
+
+
+```
+
 ```{r draft-viz-for-discussion-only, echo=FALSE, include=FALSE }
 
 #### for viz, ponder about using these, or derivative thereof 
+
+# viz_fund_dem_chron is just fund_dem_chron with fewer columns
 
 feel_for_data = viz_fund_dem_chron %>% 
   filter( rural_class == "rural" ) 
@@ -515,6 +558,7 @@ feel_for_data %>%
 ### above are all 0... which implies no fundings for them... should give them some love!?
 
 
+  
 
 ```
 
@@ -574,14 +618,17 @@ As background reference, across all 58 CA counties, we found these statistics:
  * average rent:own ratio is: 64.7%
  * average age is: 38.5
 
-Where age, renter to owner ratio, or % Chronic Mortality is higher than the state-wide average, they are highlighted in blue.  
+Where age, renter to owner ratio, or Chronic Mortality is higher than the state-wide average, they are highlighted in blue.  
 Note that mortality rate is calculated based on the latest available  population data: 2012.
+Number of Chronic cases for each county is actually the average number of yearly cases between 2016-2022.
 
 
 ```{r print quality table, echo=F, include=T }
 
 grey_blue = "rgb(187, 216, 228)"  # custom color from lecture material
 
+
+# viz_fund_dem_chron is just fund_dem_chron with fewer columns
 viz_focus = viz_fund_dem_chron %>%
   filter( rural_class      == "rural",
           high_med_age     == TRUE 
@@ -591,18 +638,23 @@ viz_focus = viz_fund_dem_chron %>%
 focus_table = viz_focus %>%
   mutate( USD_amount = currency( Numeric_Cost, digits=0L)) %>%
   select( County, 
-          pop12_sqmi,
           med_age,
           rent_own_ratio,
-          pct,                    # prevalence,         
+          pop12_sqmi,
+          pop2012,
+          sum_count,
+          #pct,                    # prevalence,
+          per100k,                    # prevalence per 100k pop
           USD_amount, 
   ) %>% 
   arrange( desc( rent_own_ratio )) %>%
   rename(
     `Pop Density`          = pop12_sqmi,
+    `Total Pop`            = pop2012,
+    `Num of Chronic cases` = sum_count,
     `Median Age`           = med_age,
     `Rent:Own Ratio`       = rent_own_ratio,
-    `% Chronic Mortality`  = pct,
+    `Chronic Mortality per 100k`  = per100k,
     `HCAI Fund in 2022`    = USD_amount
   ) 
 
@@ -619,18 +671,22 @@ datatable(
             caption = "Table 1: Rural Counties with high median age, rental ratio, and chronic disease rate",
             rownames=FALSE,
           ) %>%
-  formatRound( 2:3, 1 ) %>%
-  formatRound( 4:5, 2 ) %>%
-  formatCurrency( 6, currency="$", digits=0 ) %>%
-  formatStyle(3,backgroundColor = styleInterval(c(avg_age),              c('white',grey_blue))) %>%  # highlite = older than state avg
-  formatStyle(5,backgroundColor = styleInterval(c(avg_chronic_mortality),c('white',grey_blue))) %>%  # highlite = higher chronic mortality than state avg
-  formatStyle(4,backgroundColor = styleInterval(c(avg_rent_ratio),       c('white',grey_blue)))      # highlite = rental ratio > state avg, none in here fit this criteria
+  formatRound( 2,   1 ) %>%
+  formatRound( 3:4, 2 ) %>%
+  formatRound( 5:7, 0 ) %>%
+  formatRound( 8,   0 ) %>%
+  formatCurrency( 8, currency="$", digits=0 ) %>%
+  formatStyle(2,backgroundColor = styleInterval(c(avg_age),              c('white',grey_blue))) %>%     # highlite = older than state avg
+  formatStyle(3,backgroundColor = styleInterval(c(avg_rent_ratio),       c('white',grey_blue))) %>%     # highlite = rental ratio > state avg, none in here fit this criteria
+  formatStyle(7,backgroundColor = styleInterval(c(avg_chronic_mortality_per100k),c('white',grey_blue))) # highlite = higher chronic mortality than state avg
 
 ```
 
 ## Demographics and Funding of Rural Counties
 
 Figure 1 displays a few of the characteristics of interest in more detail for rural counties. For each county, the first two subplots depict median age and rent:own ratio, respectively. The third subplot depicts the funding amount each county received on projects with a status of "in construction" as of August 2022. We wanted to explore this variable in addition to funding for projects in closure as it's an important factor in deciding who needs funding most urgently. 
+
+(++Please add what conclusion should the reader leave from reading this table++)
 
 ```{r, echo=F, include=T}
 rural_counties_funding <- funding_data %>% 
@@ -699,18 +755,22 @@ chronic_focus_counties = inner_join(
   ) )
 
 
-fig_mortality = plot_ly( data = chronic_focus_counties ) %>%
-    add_trace(
+fig_mortality = plot_ly( 
+  data = chronic_focus_counties ,
             x = ~County,
-            y = ~pct,
+            y = ~per100k
+  
+  ) %>%
+    add_trace(
             #name = 'Fig 2: Chronic Mortality Rates by Counties',
             marker = list(color = ~ctyColor),
             hoverinfo = "text",
-            text = ~paste(round(pct, 1), "%" ),  
+            #text = ~paste(round(per100k, ), "%" ),
+            text = ~paste("Total Cases:", sum_count, "2012 Population: ", pop2012, "Mortality Rate: ", round(per100k, 1)  ),  
             type = 'bar') %>%
    layout(
-            title = "Fig 1: Chronic Mortality Rates For California's Rural Counties", 
-            yaxis = list( title="% Mortality Rate"),
+            title = "Fig 2: Chronic Mortality Rates For California's Rural Counties", 
+            yaxis = list( title="Mortality Rate per population of 100k"),
             xaxis = list( title="County", categoryorder='total descending' )
          )
 
