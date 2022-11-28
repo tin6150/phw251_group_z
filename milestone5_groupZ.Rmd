@@ -654,20 +654,19 @@ focus_table = viz_focus %>%
           rent_own_ratio,
           pop12_sqmi,
           pop2012,
-          avg_count,
-          #pct,                    # prevalence,
+          avg_count ,
           per100k,                    # prevalence per 100k pop
           USD_amount, 
   ) %>% 
   arrange( desc( rent_own_ratio )) %>%
   rename(
-    `Pop Density`          = pop12_sqmi,
-    `Total Pop`            = pop2012,
-    `Num of Chronic cases` = avg_count,
-    `Median Age`           = med_age,
-    `Rent:Own Ratio`       = rent_own_ratio,
+    `Pop Density`                 = pop12_sqmi,
+    `Total Pop`                   = pop2012,
+    `Num of Chronic cases`        = avg_count,
+    `Median Age`                  = med_age,
+    `Rent:Own Ratio`              = rent_own_ratio,
     `Chronic Mortality per 100k`  = per100k,
-    `HCAI Fund in 2022`    = USD_amount
+    `HCAI Fund in 2022`           = USD_amount
   ) 
 
 # DT wk 11 reader pdf p6
