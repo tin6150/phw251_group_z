@@ -109,7 +109,8 @@ chronic_by_county = chronic_mortality_data %>%
   select( -Geography_Type ) %>% # Geo type restricted to "Occurrence"
   filter( Year >= 2016 )     %>%   # 2016-2020 = 5 years
   group_by( County ) %>%
-  summarize( sum_count = sum(Count) )
+  summarize( sum_count5 = sum(Count),       # this is a 5 year count!
+             avg_count  = sum(Count) / 5 ) 
 
 ```
 
@@ -470,8 +471,8 @@ focus_dem %>% head( 13 )
 demographics_chronic = left_join( demographics_data, 
                                   chronic_by_county, 
                                   by = "County"      ) %>% 
-  mutate( pct     = ( sum_count / pop2012 ) * 100 ) %>%
-  mutate( per100k = ( sum_count / pop2012 ) * 100000 ) 
+  mutate( pct     = ( avg_count / pop2012 ) * 100 ) %>%
+  mutate( per100k = ( avg_count / pop2012 ) * 100000 ) 
 
 # pct = "prevalence" percentage
 
@@ -500,7 +501,7 @@ viz_fund_dem_chron = fund_dem_chron %>%
           high_med_age,
           rent_own_ratio,
           high_rental,
-          sum_count,
+          avg_count,
           pct,                    # prevalence,         
           per100k,                # prevalence,  per 100k pop
           Numeric_Cost, 
@@ -510,6 +511,22 @@ viz_fund_dem_chron = fund_dem_chron %>%
 
 ```
 
+
+```{r spot_check_mortality_from_source_data, echo=FALSE, include=FALSE }
+
+# grabbing data from raw source 
+
+mortality_data_raw %>%
+  filter( County == "Siskiyou" ) %>%
+  filter( Year == 2020 ) %>%
+  filter( Strata == "Total Population" ) %>% 
+  filter( Geography_Type == "Occurrence" ) %>% 
+  filter( Cause_Desc %in% chronic_desc)
+
+# 26+121+39+15+107+26
+# 334
+
+```
 
 ```{r spot_check_mortality, echo=FALSE, include=FALSE }
 
@@ -530,13 +547,8 @@ scm2 = demographics_chronic %>%
 #sum_count  for siskiyou is  1614
 # as fraction is .03517  (ie 3.6%)
 # as per 100,000 then 1614*100000/45200 = 3570.796
+## this was a 5 years count ... fixed with avg_count 
 
-
-# this where mortality rate was calc (as pct)
-#demographics_chronic = left_join( demographics_data,
-#                                  chronic_by_county,
-#                                  by = "County"      ) %>%
-#  mutate( pct = ( sum_count / pop2012 ) * 100 )
 
 
 
@@ -620,7 +632,7 @@ As background reference, across all 58 CA counties, we found these statistics:
 
 Where age, renter to owner ratio, or Chronic Mortality is higher than the state-wide average, they are highlighted in blue.  
 Note that mortality rate is calculated based on the latest available  population data: 2012.
-Number of Chronic cases for each county is actually the average number of yearly cases between 2016-2022.
+Number of Chronic cases for each county is actually the average number of yearly cases between 2016-2020.
 
 
 ```{r print quality table, echo=F, include=T }
@@ -642,7 +654,7 @@ focus_table = viz_focus %>%
           rent_own_ratio,
           pop12_sqmi,
           pop2012,
-          sum_count,
+          avg_count,
           #pct,                    # prevalence,
           per100k,                    # prevalence per 100k pop
           USD_amount, 
@@ -651,7 +663,7 @@ focus_table = viz_focus %>%
   rename(
     `Pop Density`          = pop12_sqmi,
     `Total Pop`            = pop2012,
-    `Num of Chronic cases` = sum_count,
+    `Num of Chronic cases` = avg_count,
     `Median Age`           = med_age,
     `Rent:Own Ratio`       = rent_own_ratio,
     `Chronic Mortality per 100k`  = per100k,
@@ -766,7 +778,7 @@ fig_mortality = plot_ly(
             marker = list(color = ~ctyColor),
             hoverinfo = "text",
             #text = ~paste(round(per100k, ), "%" ),
-            text = ~paste("Total Cases:", sum_count, "2012 Population: ", pop2012, "Mortality Rate: ", round(per100k, 1)  ),  
+            text = ~paste("Total Cases:", avg_count, "2012 Population: ", pop2012, "Mortality Rate: ", round(per100k, 1)  ),  
             type = 'bar') %>%
    layout(
             title = "Fig 2: Chronic Mortality Rates For California's Rural Counties", 
