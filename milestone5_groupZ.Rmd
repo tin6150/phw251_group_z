@@ -757,38 +757,37 @@ chronic_focus_counties = inner_join(
     rural_counties,
     by = "County"                   ) %>%
   mutate( ctyColor = case_when(
-    County == "Siskiyou" ~ "red", 
+    County == "Siskiyou" ~ "red",         # these colors were to color code county, not end up using them cuz of potential confusion
     County == "Inyo"     ~ "darkorange" , 
     County == "Mariposa" ~ "blue", 
     County == "Plumas"   ~ "darkblue",
     County == "Modoc"    ~ "darkcyan",
-    TRUE                 ~ grey_blue     # "rgb(187, 216, 228)"
+    TRUE                 ~ grey_blue     # "rgb(187, 216, 228)" as used in lecture slides
   ) ) 
 
 
 fig_mortality = plot_ly( 
-  data   = chronic_focus_counties ,
-  type   = 'bar',                    
-  marker = list(color = grey_blue),
-  showlegend = F,
-  text   = ~paste(round(per100k, 0) ),
-              x = ~County,
-              y = ~per100k
+    data   = chronic_focus_counties ,
+    x      = ~County,
+    y      = ~per100k,
+    type   = 'bar',               
+    text   = ~paste( round( per100k, 0) ),
+    showlegend = F,
+    marker     = list(color = grey_blue)
   ) %>%
-  
-add_trace(
+  add_trace(
             name = 'Fig 2: Chronic Mortality Rates by Counties',
-            marker = list(color = "Blue"),
+            marker = list( color = "lightgrey", size=10,
+                           line  = list( color="grey", width=2 ) ),
             #marker = list(color = ~ctyColor),
-            text = ~paste("Total Average Yearly Cases:",   avg_count, 
-                          "<BR>2012 Population: ",         pop2012, 
-                          "<BR>Mortality Rate per 100k: ", round(per100k, 0)  )  ,
+            text = ~paste( "Total Average Yearly Cases:",   avg_count, 
+                           "<BR>2012 Population: ",         pop2012, 
+                           "<BR>Mortality Rate per 100k: ", round(per100k, 1) ),
             hoverinfo = "text",
-            #text = ~paste(round(per100k, 0) ),
-      
-            type = 'scatter'
-            ) %>%
-   layout(
+            type      = "scatter"  ,
+            mode      = "markers"
+        ) %>%
+  layout(
             title = "Fig 2: Chronic Mortality Rates For California's Rural Counties", 
             yaxis = list( title="Mortality Rate per population of 100k"),
             xaxis = list( title="County", categoryorder='total descending' )
