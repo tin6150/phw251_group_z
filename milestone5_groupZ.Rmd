@@ -695,9 +695,7 @@ datatable(
 
 ## Demographics and Funding of Rural Counties
 
-Figure 1 displays a few of the characteristics of interest in more detail for rural counties. For each county, the first two subplots depict median age and rent:own ratio, respectively. The third subplot depicts the funding amount each county received on projects with a status of "in construction" as of August 2022. We wanted to explore this variable in addition to funding for projects in closure as it's an important factor in deciding who needs funding most urgently. 
-
-(++Please add what conclusion should the reader leave from reading this table++)
+Figure 1 visualizes demographic and funding characteristics to further rank and narrow the selection of rural counties. For each county, the first two subplots depict median age and rent:own ratio, respectively. The third subplot depicts the HCAI funding amount each county received on projects with a status of "in construction" as of August 2022. Since all rural counties had no funding for projects "in closure", our team felt it was important to explore funding for projects "in construction". Together these scatter plots provide a visual comparison of where each county falls on the measurement scales of each criteria. 
 
 ```{r, echo=F, include=T}
 rural_counties_funding <- funding_data %>% 
@@ -874,15 +872,9 @@ Maximum of 1,000 words
 While no county perfectly fit all three attributes of rural, high rental rate,
 and high median age rate, our visualizations and analysis offer a holistic view of which counties best fit the selection criteria. Our first step narrowed down which counties are "rural" as defined by the National Rural Development Partnership, and had a median age higher than the state-wide average. These 8 counties are depicted in Table 1, which includes data on the other selection criteria. Here we see that none of these rural counties have HCAI funding for projects with an "In Closure" status for August 2022.
 
-Figure 1 provides a visual display of demographics and funding in rural counties. Most notable is 
-that the third subplot displays funding received for projects "In Construction" as of August 2022.
-While all of these had a zero dollar amount in projects with "In Closure" status, both Inyo and Siskiyou reported funding of "In Construction" projects over $4 million. Counties that reported zero dollar amounts in both categories include Alpine, Mariposa, Modoc, and Sierra. Sierra additonally has the highest median age. Across all subplots in figure 1, we find three rural counties of particular interest: Mariposa, Modoc, and Plumas. 
+Figure 1 provides a visual comparison of demographics and funding in rural counties. Most notable is  that the third subplot displays funding received for projects "In Construction" as of August 2022. Both Inyo and Siskiyou reported funding of "In Construction" projects over 4 million dollars. Counties that reported zero dollar amounts in both categories include Alpine, Mariposa, Modoc, and Sierra. While Plumas and Trinity received funding, it was under 1 million dollars. Plumas and Mariposa rank in the top 5 counties across all three subplots. Sierra, Siskiyou, and Modoc rank high in two criteria categories each. Evaluating chronic mortality rates from Figure 2 helps us narrow down the selection even more. The 5 counties with the highest mortality rate include Siskiyou, Inyo, Mariposa, Plumas and Modoc. These counties align with those found to have high median age and large renter to owner ratio in Table 1 and Figure 1. Clearly, with Inyo and Siskiyou having such high chronic mortality rates, funding on health care improvements is necessary. Without adequate data on chronic mortality rates in Sierra and Alpine counties, it is hard to justify allocating funding at this time. We recommend further study in those areas to capture mortality and assess need for improvement projects.
 
-Figure 2 ranks the 11 rural California counties by decreasing chronic mortality rate.
-The 5 counties with the highest mortality rate include Siskiyou, Inyo, Mariposa, 
-Plumas and Modoc. These counties align with those found to have high median age and large renter to owner ratio in Table 1 above. Figure 2 also helps us narrow down our selection because, while Alpine and Sierra have not recently received funding, they have the lowest mortality rates. Although in Figure 1 Inyo and Siskiyou have received funding, their mortality rates are quite high, indicating that a higher need for funding.
-
-Ultimately, our analysis identfied Inyo, Siskiyou, Mariposa, Modoc, and Plumas counties to receive HCAI Funding. 
+Ultimately, we propose funding development projects for healthcare facility improvement in Inyo, Siskiyou, Mariposa, Modoc, and Plumas counties.
 
 `++ please expand, what the other visuals says, etc ++`
 
