@@ -811,9 +811,18 @@ group_by(County,Cause) %>% summarize(count_cause=sum(Count)) %>% arrange(County,
 table_data_e[1,2]<-"Not Available"
 table_data_e[9,2]<-"Not Available"
 
-common_chronic<- kable(table_data_e, col.names=c("County", "Chronic Disease", "Number Reported"),
-digits=0, booktabs=T, escape=F, align="ccc", caption="Most Common Chronic Disease by Rural County in 2020")
-common_chronic
+#common_chronic<- kable(table_data_e, col.names=c("County", "Chronic Disease", "Number Reported"),
+#digits=0, booktabs=T, escape=F, align="ccc", caption="Most Common Chronic Disease by Rural County in 2020")
+#common_chronic
+
+datatable(table_data_e, options= list(
+  lengthMenu= c(10,11)),
+  rownames=F,
+  colnames=c("County", "Chronic Disease", "Number Reported"))
+#couldn't figure out how to add a title
+
+
+
 ```
 
 # This was left out in Milestone 4, probably no need for it here either.
