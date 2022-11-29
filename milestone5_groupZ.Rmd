@@ -1,23 +1,15 @@
 ---
-title: "**DRAFT** Milestone 5 Group Z **DRAFT** "
+title: "Milestone 5 Group Z"
 output: html_document
-date: '2022-11-24'
+date: '2022-11-28'
 author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho'
 ---
 
-**DRAFT**  **DRAFT**  **DRAFT** 
+This web report is accessible at
+[https://tin6150.github.io/phw251_group_z/milestone5_groupZ.html](https://tin6150.github.io/phw251_group_z/milestone5_groupZ.html)
 
-# Web access to knitted HTML output
-
-We have decided to take a leap and try plot_ly and knit to html output for this milestone.
-The html page is hosted as [Github Pages](https://pages.github.com/) and is accessible
-in this address:
-++TBD++ [https://tin6150.github.io/phw251_group_z/milestone5_groupZ.html](https://tin6150.github.io/phw251_group_z/milestone5_groupZ.html)
-
-
-This is intended as final end user report, 
-code blocks have been omitted for brevity, but it is available at
-[our github repo](https://github.com/tin6150/phw251_group_z) )
+Code used for analsys and visual generation is available at 
+[our github repo](https://github.com/tin6150/phw251_group_z).
 
 ```{r load-lib, include=FALSE, echo=FALSE}
 library(tidyverse)
@@ -550,9 +542,6 @@ scm2 = demographics_chronic %>%
 ## this was a 5 years count ... fixed with avg_count 
 
 
-
-
-
 ```
 
 ```{r draft-viz-for-discussion-only, echo=FALSE, include=FALSE }
@@ -570,28 +559,17 @@ feel_for_data %>%
 ### above are all 0... which implies no fundings for them... should give them some love!?
 
 
-  
-
 ```
 
 \newpage 
 
 # Final Report
 
-## Problem Statement (1-2 paragraphs)
+## Problem Statement
 
 The California Department of Public Health Office of Health Equity (OHE) recently issued a new policy to create a public-private partnership to improve healthcare facilities in five rural counties across the state. Our team will evaluate and recommend which counties should receive development funding proposals based on equitable selection criteria created by OHE. Specifically, we will explore data to identify which rural counties have more non-homeowners, aging individuals, higher chronic mortality rates, and have received minimal funding from the Department of Health Care Access and Information.
 
-## Methods, for each data source
-
-```
-  Source
-  Years and/or dates of data
-  Description of cleaning and creating new variables
-  Analytic methods
-```
-
-`++ please review that they make sense, and that i didn't omit anything and met the rubric requirements ++`
+## Methods
 
 We used 3 datasets for this project:
 
@@ -610,12 +588,8 @@ After cleaning and filtering the 3 datasets above, we joined them by county name
 
 ## Results 
 
-`++TEMP NOTE++`
-`I (Tin) changed filter from Year>2016 to Year>=2016 to have a proper 5 year bracket,`
-`results not significatly different than Milestone 4`
 
-
-## Rural counties with high median age and renter to owner ratio 
+### Rural Counties Profiles
 
 
 Table 1 shows CA counties that are rural
@@ -693,7 +667,7 @@ datatable(
 
 ```
 
-## Demographics and Funding of Rural Counties
+### Demographics and Funding of Rural Counties
 
 Figure 1 visualizes demographic and funding characteristics to further rank and narrow the selection of rural counties. For each county, the first two subplots depict median age and rent:own ratio, respectively. The third subplot depicts the HCAI funding amount each county received on projects with a status of "in construction" as of August 2022. Since all rural counties had no funding for projects "in closure", our team felt it was important to explore funding for projects "in construction". Together these scatter plots provide a visual comparison of where each county falls on the measurement scales of each criteria. 
 
@@ -739,7 +713,7 @@ subplot(MedianAgePlot, RentPlot, Funding_Construction_Plot, shareY=F) %>%
 
 
 
-## Mortality Rate by County
+### Mortality Rate by County
 
 Figure 2 is a bar graph of Mortality Rate for Chronic diseases (as defined by CDC)
 across the 11 rural counties in CA (as defined by National Rural Development Partnership)
@@ -797,9 +771,10 @@ fig_mortality
 ```
 
 
-## Table showing most common disease by rural county
+### The Most Common Disease by Rural County
 
 This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available.  As we expand funding in the 5 select counties of focus, special emphasis should be placed on Heart Disease, as that's the most common chronic illness causing high mortality.
+
 *HTD= Heart Disease, CAN= Cancer
 
 ```{r, echo=F, include=T}
@@ -816,23 +791,22 @@ table_data_e[9,2]<-"Not Available"
 #common_chronic
 
 datatable(table_data_e, options= list(
-  lengthMenu= c(10,11)),
+  dom = 't',                    # only want the table, nothing else
+  order = list( 2, "desc" ),    # col# to sort the data by, start with 0!
+  lengthMenu= c(11,12)),
   rownames=F,
+  caption = "Table 2: Common chronic diseases in rural counties of California",
   colnames=c("County", "Chronic Disease", "Number Reported"))
-#couldn't figure out how to add a title
-
-
 
 ```
 
-# This was left out in Milestone 4, probably no need for it here either.
 
 
-```{r viz: funding for select counties, echo=F, include=T }
-
+```{r viz: funding for select counties, echo=F, include=F }
 
 # HCAI Funding for all 58 counties
-
+# This was left out in Milestone 4, could be a 
+# backup slide, but no such think in a report, so just ommited it.
 
 counties_funding_comp = funding_data %>%
   filter( `OSHPD Project Status` == "In Closure"  ) %>%
@@ -869,35 +843,25 @@ fig_hcai_all
 
 ```
 
+## Discussion 
 
-## Discussion (interpretation of results)
-
-Maximum of 1,000 words
-
-
-`++ please improve on this ++`
-
-
-While no county perfectly fit all three attributes of rural, high rental rate,
-and high median age rate, our visualizations and analysis offer a holistic view of which counties best fit the selection criteria. Our first step narrowed down which counties are "rural" as defined by the National Rural Development Partnership, and had a median age higher than the state-wide average. These 8 counties are depicted in Table 1, which includes data on the other selection criteria. Here we see that none of these rural counties have HCAI funding for projects with an "In Closure" status for August 2022.
+For the new public-private partnership to improve healthcare, the OHE director wanted to focus on rural areas that have high rental rates and high median age.  However, no county perfectly fit all three attributes.  Therefore, we offer visualizations and analysis with a holistic view of which counties best fit the selection criteria. Our first step narrowed down which counties are "rural" as defined by the National Rural Development Partnership, and had a median age higher than the state-wide average. These 8 counties are depicted in Table 1, which includes data on the other selection criteria. Here we see that none of these rural counties have HCAI funding for projects with an "In Closure" status for August 2022.
 
 Figure 1 provides a visual comparison of demographics and funding in rural counties. Most notable is that the third subplot displays funding received for projects "In Construction" as of August 2022. Both Inyo and Siskiyou reported funding of "In Construction" projects over 4 million dollars. Counties that reported zero dollar amounts in both categories include Alpine, Mariposa, Modoc, and Sierra. While Plumas and Trinity received funding, it was under 1 million dollars. Plumas and Mariposa rank in the top 5 counties across all three subplots. Sierra, Siskiyou, and Modoc rank high in two criteria categories each. Evaluating chronic mortality rates from Figure 2 helps us narrow down the selection even more. The 5 counties with the highest mortality rate include Siskiyou, Inyo, Mariposa, Plumas and Modoc. These counties align with those found to have high median age and large renter to owner ratio in Table 1 and Figure 1. Clearly, with Inyo and Siskiyou having such high chronic mortality rates, funding on health care improvements is necessary. Without adequate data on chronic mortality rates in Sierra and Alpine counties, it is hard to justify allocating funding at this time, as we don't know what would be most beneficial. We recommend further study in those areas to capture mortality and assess need for improvement projects. In the meantime, based on the information from counties that reported chronic disease information, heart disease seems to be the most common, so we now have a staring point for the future project we may want to focus on. 
 
 Ultimately, we propose funding development projects for healthcare facility improvement in Inyo, Siskiyou, Mariposa, Modoc, and Plumas counties.
 
-`++ please expand, what the other visuals says, etc ++`
 
-
+```{r aubrey-orig-plot-milestone4, include=F, echo=F}
 
 #Aubreys original plot from milestone 4 -- dont't feel like it adds much info.
 # placing here just in case you all feel differently
-The following boxplot summarizes chronic disease mortality rates from all 
-CA counties, grouped according to HCAI funding amounts for in closure projects 
-as of August 2022. The funding amounts were categorized as "high" if they were 
-above the mean amount, low if they were below the mean, and "no funding" if no 
-funding for in closure projects was reported. 
+#The following boxplot summarizes chronic disease mortality rates from all 
+#CA counties, grouped according to HCAI funding amounts for in closure projects 
+#as of August 2022. The funding amounts were categorized as "high" if they were 
+#above the mean amount, low if they were below the mean, and "no funding" if no 
+#funding for in closure projects was reported. 
 
-```{r}
 
 funding_chronic <- funding_data %>% 
   filter( `OSHPD Project Status` == "In Closure") %>%
