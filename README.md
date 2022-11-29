@@ -17,4 +17,6 @@ Project Assigment page in [bCourses](https://bcourses.berkeley.edu/courses/15175
 Milestone 4 knitted HTML output:
 [https://tin6150.github.io/phw251_group_z/milestone4_groupZ.html](https://tin6150.github.io/phw251_group_z/milestone4_groupZ.html).
 
+Milestone 5 knitted HTML output:
+[https://tin6150.github.io/phw251_group_z/milestone5_groupZ.html](https://tin6150.github.io/phw251_group_z/milestone5_groupZ.html).
 
