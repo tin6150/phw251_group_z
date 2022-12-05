@@ -1,0 +1,888 @@
+---
+title: "Milestone 6 Group Z - DRAFT"
+output: html_document
+date: '2022-12-04'
+author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho'
+---
+
+This web report is accessible at
+[https://tin6150.github.io/phw251_group_z/milestone5_groupZ.html](https://tin6150.github.io/phw251_group_z/milestone5_groupZ.html)
+++FIXME++
+
+Code used for analsys and visual generation is available at 
+[our github repo](https://github.com/tin6150/phw251_group_z).
+
+```{r load-lib, include=FALSE, echo=FALSE}
+library(tidyverse)
+library(dplyr)
+library(kableExtra)
+library(lubridate)
+library(ggplot2)
+library(plotly)
+library(formattable)   # for currency()
+library(DT)            # and NOT data.table
+
+
+# omit warning messages from library load
+# https://stackoverflow.com/questions/45399587/how-to-remove-warning-messages-in-r-markdown-document
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+```
+
+
+```{r massage mortality data, echo=FALSE, include=FALSE}
+
+## Loading & Cleaning data : Mortality
+
+#**Suggestions from Lauren: 
+#  -confirm we're not double counting deaths in mortality data 
+#     Yes we are filtering by Total Population
+#  -summarize mortality rates by county and use rates instead of counts before joining 
+#     Okay now calculated Rate as count / pop12 
+
+# Loading Mortality Data 
+
+mortality_path <- 'data/ca_county_mortality.csv'
+mortality_data_raw <- read_csv(mortality_path, 
+                           na= c("", "NA", "-"),
+                           show_col_types=F)
+
+mortality_data <- mortality_data_raw %>% mutate_all(~replace( ., is.na(.), 0))
+
+# View(mortality_data)
+# There are NA values in mortality_data, so we need to replace NA w/ 0
+
+mortality_data %>% select( Year ) %>% unique()
+# Mortality data is from 2014 - 2020.
+
+mortality_data %>% select( "Cause_Desc" ) %>% unique() %>% tally()
+# contain 15 diseases, but one is "All causes (total)"
+
+
+# subset mortality data for chronic conditions only
+
+chronic_desc = c( 
+  "Chronic lower respiratory diseases",
+  "Diabetes mellitus",
+  "Diseases of heart",
+  "Essential hypertension and hypertensive renal disease",
+  "Chronic liver disease and cirrhosis",
+  "Alzheimer's disease",
+  "Malignant neoplasms",
+  "Nephritis, nephrotic syndrome and nephrosis",
+  "Cerebrovascular diseases",
+  "Parkinson's disease"
+  )
+
+str( chronic_desc )
+
+chronic_mortality_data = mortality_data %>% 
+  filter( Cause_Desc %in% chronic_desc )
+
+num_rows_befor_filter = mortality_data %>% tally
+num_rows_after_filter = chronic_mortality_data %>% tally
+#num_rows_after_filter
+
+num_rows_filtered = num_rows_befor_filter - num_rows_after_filter
+num_rows_filtered
+
+
+#View(chronic_mortality_data)
+
+# chronic case count by county in the last 5 years
+# Question prompt:
+## Second, OHE’s director would also like to include a total count of mortality 
+## from chronic health conditions 
+## over the past few years into the county level analysis. 
+
+
+chronic_by_county = chronic_mortality_data %>%
+  filter(  Strata == "Total Population") %>%
+  filter(  Geography_Type == "Occurrence" ) %>%
+  select( -Geography_Type ) %>% # Geo type restricted to "Occurrence"
+  filter( Year >= 2016 )     %>%   # 2016-2020 = 5 years
+  group_by( County ) %>%
+  summarize( sum_count5 = sum(Count),       # this is a 5 year count!
+             avg_count  = sum(Count) / 5 ) 
+
+```
+
+```{r massage funding data, echo=FALSE, include=FALSE}
+
+# Loading HCAI funding Data 
+
+funding_path = 'data/hcai_healthcare_construction.csv'
+funding_data <- read_csv(  funding_path, 
+                           na= c("", "NA", "-"),
+                           show_col_types=F       )
+
+CtyColl = select(funding_data, c("Collection of Counties")) %>%
+  unique()
+
+CtyColl 
+## there are 4 collection of counties, 
+## there aren't likely needed for data eval,
+## but add lots of NA, so dropping them
+#1 Bay Area Counties           
+#2 NA                          
+#3 Greater Sacramento Counties 
+#4 Greater Los Angeles Counties
+
+# finding where in the data frame there is an 'na'
+# https://www.geeksforgeeks.org/find-columns-and-rows-with-na-in-r-dataframe/
+## funding_data_no_CtyColl = select(funding_data, -c("Collection of Counties"))
+funding_data = select(funding_data, -c("Collection of Counties"))
+
+## which(is.na(funding_data_no_CtyColl), arr.ind=T)
+# above returns 0 rows, ie
+# we find that only the column "Collection of Counties" has 'na'
+# we will leave this for now since it may just be a colloquial reference
+# unimportant for our data analysis.
+# no replacement for na with 0 will be done on this data frame.
+
+
+
+# the Costs column has human data, eg $50,890,315.00
+# and we need to strip the dollar sign, the commas, 
+# and convert them to numbers.  
+# ref: https://stackoverflow.com/questions/31944103/convert-currency-with-commas-into-numeric
+# we create a new column for this called "Numeric_Cost", 
+# but could have potentially done an in-place replacement
+funding_data = funding_data %>% 
+  mutate(Numeric_Cost = as.numeric(
+    gsub( '[$,]', '', funding_data[["Total Costs of OSHPD Projects"]] ) 
+  ))
+
+funding_data = funding_data %>%
+  mutate( county_name = str_sub( County, 6 )) %>%
+  subset(select = -c(County)) %>%
+  rename(County = county_name)
+
+# subset HCAI funding data for those "In Closure" state
+
+funding_data_closure <- funding_data %>%
+  filter(`OSHPD Project Status` == "In Closure") %>%
+  filter(`Data Generation Date` == as_date("2022-08-11")  )
+
+  ## 2022-08-11 is the latest avail data
+
+```
+
+
+
+```{r spot checks, echo=FALSE, include=FALSE}
+
+
+funding_data_closure %>% arrange( Numeric_Cost ) %>% head( 10 )
+
+#View(funding_data)
+#View(funding_data_closure)
+
+funding_data %>% select( `Data Generation Date` ) %>% unique() %>% tally() ## 231 rows
+
+selected_counties = c(
+  "Inyo",
+  "Siskiyou",
+  "Mariposa",
+  "Modoc",
+  "Plumas"
+)
+
+funding_data_selected_counties = funding_data %>% 
+  #filter( County == "Alameda" ) %>%
+  #filter( County == "Inyo" ) %>%
+  #filter( County %in% selected_counties  ) %>%
+  filter( `OSHPD Project Status` == "In Closure" |
+            `OSHPD Project Status` == "In Construction"    ) %>%
+  #filter( `OSHPD Project Status` == "Pending Construction"  ) %>%
+  #filter( `OSHPD Project Status` == "In Review"  ) %>%
+  filter( `Data Generation Date` == 
+            as_date( "2022-08-11" ) 
+            #as_date( "2020-01-01" ) 
+            #as_date( "2016-01-01" ) 
+          )
+
+chk1 = 
+  ggplot( data = funding_data_selected_counties,
+          aes( x = `Data Generation Date`, 
+               y = Numeric_Cost             ) ) +
+  geom_bar( stat="identity", position="dodge" ) +
+  labs( title = 'Prj cost over time' ) + 
+  facet_wrap( ~ County )
+
+
+chk1
+
+
+## some number may linger in closure for longer than other?
+## so taking average of closure amount over say 5 months may lead to skewed data
+## really just make sense to just use the last data point.
+
+
+funding_data_allSources = funding_data %>% 
+  #filter( County == "Alameda" ) %>%
+  #filter( County == "Mariposa" ) %>%
+  #filter( County == "Inyo" ) %>%
+  filter( County %in% selected_counties  ) %>%
+  filter( `Data Generation Date` > 
+            #as_date( "2022-01-01" ) 
+            #as_date( "2020-01-01" ) 
+            as_date( "2016-01-01" ) 
+          )
+
+
+chk_allSrc = 
+  ggplot( data = funding_data_allSources,
+          aes( x = `Data Generation Date`, 
+               y = Numeric_Cost             ) ) +
+  geom_bar( stat="identity", position="dodge" ) +
+  labs( title = '1 county, prj stage' ) + 
+  facet_wrap( ~ `OSHPD Project Status` )
+
+
+chk_allSrc
+
+
+## there is likely more to the story about these costs
+## expect to see approved project to have a peak in Review
+## then the peak move to Pending Construction, In Construction
+## then In Closure
+## but maybe their cost is finance book remaining budget account?
+## data doesn't fully make sense
+## but it is just homework, take a snapshot of "In Closure", and let it be.
+
+```
+
+
+```{r massage demographics data, echo=FALSE, include=FALSE}
+
+
+# Load demographics data
+
+demographics_path = 'data/ca_county_demographics.csv'
+demographics_data = read_csv( demographics_path, 
+                              na = c("", "NA", "-"), 
+                              show_col_types=F )
+
+# the first column contains id number, but it is unamed, so renaming it
+# rest of the columns have reasonable names, so left them as is.
+demographics_data = rename( demographics_data, id="...1")
+
+# View(demographics_data)
+
+
+# massaging demographics data
+
+demographics_data <- demographics_data %>%
+  select(id, name, pop2012, pop12_sqmi, med_age, owner_occ, renter_occ) %>%
+  rename( `County` = name )
+
+
+## Determining Renters vs Homeowners Ratio
+demographics_data = demographics_data %>%
+  mutate( rent_own_ratio = renter_occ / owner_occ )
+
+
+demographics_data <- 
+  mutate(demographics_data, 
+         rural_class=if_else( pop12_sqmi < 20, "rural", "not rural", missing=NULL))
+
+# column to show whether county was rural or not
+rural_not_rural <- demographics_data %>% 
+  select( County, rural_class, pop12_sqmi, rent_own_ratio, med_age )  
+
+rural_counties = rural_not_rural   %>%
+  filter( rural_class == "rural" ) 
+  #rename( `Class`  = rural_class )
+
+
+#### consider a "low pop density" rather than a strict "rural"
+#### --> not really good, 49 counties in this grouping
+
+avg_pop_density = mean( demographics_data$pop12_sqmi )
+demographics_data = demographics_data %>% 
+  mutate( low_pop = if_else( pop12_sqmi < avg_pop_density , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   ))
+
+
+```
+
+
+```{r demographics data complete set high rental, old age, echo=FALSE, include=FALSE}
+
+high_rental_ratio = 
+  rural_counties %>% arrange( desc( rent_own_ratio  ) ) 
+
+high_med_age = 
+  rural_counties %>% arrange( desc( med_age  ) ) 
+
+## Determine any counties satisfy triple whammy rule
+
+avg_rent_ratio = mean( demographics_data$rent_own_ratio )
+avg_age        = mean( demographics_data$med_age  )
+
+demographics_data = demographics_data %>% 
+  mutate( high_med_age = if_else( med_age > avg_age , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   )) %>%
+  mutate( high_rental = if_else( rent_own_ratio > avg_rent_ratio , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   )) 
+  
+triple_whammy = demographics_data %>%
+  filter( rural_class  == "rural" &
+          high_rental  == TRUE    &  
+          high_med_age == TRUE       )
+
+### so 0 county satisfy the triple whammy rule
+### need to modify  selection criteria
+```
+
+
+```{r demographics data RURAL set only, high rental, old age, echo=FALSE, include=FALSE}
+
+## Use only RURAL counties to calculate their averages, and what's above average
+
+## Determine any RURAL counties satisfy double whammy rule
+#View(rural_counties)
+
+avg_rent_ratio_rural = mean( rural_counties$rent_own_ratio )
+avg_age_rural        = mean( rural_counties$med_age  )
+
+
+
+rural_demographics_data = demographics_data %>% 
+  mutate( high_med_age_rural = if_else( med_age > avg_age_rural , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   )) %>%
+  mutate( high_rental_rural = if_else( rent_own_ratio > avg_rent_ratio_rural , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   )) 
+
+#-- c( avg_rent_ratio, avg_rent_ratio_rural, avg_age, avg_age_rural )
+#-- sn50 =  rural_demographics_data %>% filter( rural_class == "rural" ) 
+```
+
+```{r tmp-double-whammy, include=FALSE, echo=FALSE}
+
+rural_double_whammy = rural_demographics_data %>%
+  filter( 
+          high_rental_rural  == TRUE    &  
+          high_med_age_rural == TRUE       )
+
+
+
+rural_double_whammy  # only 3 counties in this list: Lake, Siskiyou, Inyo
+
+rural_demographics_data %>% arrange( rent_own_ratio, med_age ) %>% head( 6 )
+
+```
+
+
+```{r dem relaxed criteria: old age, high rental in rural standard, echo=FALSE, include=FALSE}
+
+## determine old age as > avg age for full data set
+## then pick rural countries, 
+## high rental in such rural counties.
+
+
+#View(rural_counties)
+
+
+focus_demographics_data = demographics_data %>% 
+  mutate( high_rental_rural = if_else( rent_own_ratio > avg_rent_ratio_rural , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   )) %>%
+  mutate( high_med_age = if_else( med_age > avg_age , 
+                                    TRUE,
+                                    FALSE,
+                                    NULL   ))
+
+#-- c( avg_rent_ratio, avg_rent_ratio_rural, avg_age, avg_age_rural )
+#-- sn50 =  focus_demographics_data %>% filter( rural_class == "rural" ) 
+
+```
+
+```{r tmp-focus,  include=FALSE, echo=FALSE }
+
+focus_dem = rural_demographics_data %>%
+  filter( 
+          high_rental_rural  == TRUE    &  
+          high_med_age == TRUE       )    %>%
+  select( County, rural_class, high_med_age, high_rental_rural )
+
+
+rural_demographics_data %>%
+  select( County, rural_class, med_age, high_med_age, high_rental_rural ) %>%
+  arrange( high_rental_rural, desc(med_age) )
+
+#View(focus_dem)  # now have 13 counties to choose from, but not all rural
+
+```
+
+
+
+```{r discussion-use-only,  include=FALSE, echo=FALSE}
+
+## decide if need to output any of these tables
+## likely need to refine further 
+
+high_rental_ratio %>% head( 6 )
+
+high_med_age %>% head( 6 )
+
+rural_double_whammy %>% head( 6 )
+
+focus_dem %>% head( 13 )
+
+#It doesn't seems like we have high rental (ie > avg_rent) and old age (>avg_age)
+#so we will have to judge subjectively
+#-Tin
+
+
+```
+
+
+
+```{r calc chronic mortality rate, echo=F, include=F}
+# calc chronic mortality rate using census pop12 as denominator
+
+# First need to Join Chronics mortality data (by county, last 5 years)
+# and demographics data
+
+# @Lauren, 
+# here is where mortality rate  calculated
+# There is also a spot check around Line 510 
+
+demographics_chronic = left_join( demographics_data, 
+                                  chronic_by_county, 
+                                  by = "County"      ) %>% 
+  mutate( pct     = ( avg_count / pop2012 ) * 100 ) %>%
+  mutate( per100k = ( avg_count / pop2012 ) * 100000 ) 
+
+# pct = "prevalence" percentage
+
+avg_chronic_mortality         = mean( demographics_chronic$pct )
+avg_chronic_mortality_per100k = mean( demographics_chronic$per100k )
+
+```
+
+
+
+```{r join tables, echo=FALSE, include=FALSE}
+
+
+fund_dem_chron = inner_join( demographics_chronic,
+                             funding_data_closure, 
+                             by = "County" ) %>%
+  mutate( fund_per_cap = Numeric_Cost / pop2012 )
+
+viz_fund_dem_chron = fund_dem_chron %>%
+  select( County, 
+          pop2012,
+          pop12_sqmi,
+          rural_class,  
+          #low_pop,
+          med_age,
+          high_med_age,
+          rent_own_ratio,
+          high_rental,
+          avg_count,
+          pct,                    # prevalence,         
+          per100k,                # prevalence,  per 100k pop
+          Numeric_Cost, 
+          fund_per_cap,
+          `Number of OSHPD Projects`,
+          )
+
+```
+
+
+```{r spot_check_mortality_from_source_data, echo=FALSE, include=FALSE }
+
+# grabbing data from raw source 
+
+mortality_data_raw %>%
+  filter( County == "Siskiyou" ) %>%
+  filter( Year == 2020 ) %>%
+  filter( Strata == "Total Population" ) %>% 
+  filter( Geography_Type == "Occurrence" ) %>% 
+  filter( Cause_Desc %in% chronic_desc)
+
+# 26+121+39+15+107+26
+# 334
+
+```
+
+```{r spot_check_mortality, echo=FALSE, include=FALSE }
+
+# viz_fund_dem_chron is just fund_dem_chron with fewer columns
+
+scm1 = viz_fund_dem_chron %>% 
+  filter( County == "Siskiyou" )
+
+chronic_by_county %>% 
+  filter( County == "Siskiyou" )
+
+
+scm2 = demographics_chronic %>%
+  filter( County == "Siskiyou" )
+
+# Spot check for Mortality rate of Siskiyou 
+#pop12      for siskiyou is 45200
+#sum_count  for siskiyou is  1614
+# as fraction is .03517  (ie 3.6%)
+# as per 100,000 then 1614*100000/45200 = 3570.796
+## this was a 5 years count ... fixed with avg_count 
+
+
+```
+
+```{r draft-viz-for-discussion-only, echo=FALSE, include=FALSE }
+
+#### for viz, ponder about using these, or derivative thereof 
+
+# viz_fund_dem_chron is just fund_dem_chron with fewer columns
+
+feel_for_data = viz_fund_dem_chron %>% 
+  filter( rural_class == "rural" ) 
+  #filter( low_pop == TRUE )         # no good, 49 counties in this grouping
+
+feel_for_data %>% 
+  arrange( desc( fund_per_cap ) ) %>% head( 10 )
+### above are all 0... which implies no fundings for them... should give them some love!?
+
+
+```
+
+\newpage 
+
+# Final Report
+
+## Problem Statement
+
+The California Department of Public Health Office of Health Equity (OHE) recently issued a new policy to create a public-private partnership to improve healthcare facilities in five rural counties across the state. Our team will evaluate and recommend which counties should receive development funding proposals based on equitable selection criteria created by OHE. Specifically, we will explore data to identify which rural counties have more non-homeowners, aging individuals, higher chronic mortality rates, and have received minimal funding from the Department of Health Care Access and Information.
+
+## Methods
+
+We used 3 datasets for this project:
+
+ * CA demographics 
+ * CA mortality surveillance
+ * HCAI healthcare construction funding
+ 
+The first dataset is from the 2012 Census and contains demographics info for each of the 58 counties in California.  It includes info such as population per square mile, median age, number of households who are renters vs owners, ethnicity, genders, etc.   We calculated the renter to owner ratio for each county. We then calculated the average age and population density for the whole state and visually inspected the data to see how each county stack up. We ended up using the National Rural Development Partnership’s definition to determine if a given county's population density is to be classified as rural, for which there were 11.  
+
+
+The second dataset is the mortality surveillance obtained from the CA Open Data Portal.  It contains a breakdown of total mortality for each county by 15 disease areas.  We used the CDC definition to filter for the chronic diseases, for which 10 fit the criteria.  The data range from 2014 to 2020, but we were tasked to focus on the last 5 years, thus we applied a filter with `Year >= 2016`.  As tasked, we also performed filters with `Geography_Type == "Occurrence"`  and used `Strata == "Total Population"` to avoid over counting.  Any missing data were replaced with 0.  Once the data was cleaned, we summed all the disease occurrences within each county.  We joined this with the demographics data to obtain a mortality rate of chronic conditions over 5 years for each county.
+
+The third dataset is the HCAI funding, also obtained from the CA Open Data Portal.  It contains healthcare spending for each county in 4 stages of project progression, updated about every 2 weeks.  We focused on the latest available data, which was Aug 11, 2022, and those with state of "In Closure".  Many rural counties showed up with $0 amount, and we went back to double check our selection code.  It checked out, much fundings are in large populous counties such as those around the greater Los Angeles and San Francisco.  It was not that rural counties had no funding, there were fundings for example in the "In Construction" phase, but we decided to focus on "In Closure" to help our improvement plan to drive new spending for rural counties with high and variable mortality rates.
+
+After cleaning and filtering the 3 datasets above, we joined them by county name, whereby we can see which counties had high renters, high chronic mortality rates, and the funding they received.  
+
+## Results 
+
+
+### Rural Counties Profiles
+
+
+Table 1 shows CA counties that are rural
+(per National Rural Development Partnership's definition), 
+and have median age greater than the state-wide average.
+
+We have pre-sorted them by decreasing renter to owner ratio.  We observe that while none of these counties have rent:owner ratio higher than the state-wide average, they are still fairly high; and they have $0 in the latest HCAI funding that are in the Closure state.
+
+As background reference, across all 58 CA counties, we found these statistics:
+
+ * average population density: 665 person per square mile.
+ * average rent:own ratio is: 64.7%
+ * average age is: 38.5
+
+Where age, renter to owner ratio, or Chronic Mortality is higher than the state-wide average, they are highlighted in blue.  
+Note that mortality rate is calculated based on the latest available  population data: 2012.
+Number of Chronic cases for each county is actually the average number of yearly cases between 2016-2020.
+
+
+```{r print quality table, echo=F, include=T }
+
+grey_blue = "rgb(187, 216, 228)"  # custom color from lecture material
+
+
+# viz_fund_dem_chron is just fund_dem_chron with fewer columns
+viz_focus = viz_fund_dem_chron %>%
+  filter( rural_class      == "rural",
+          high_med_age     == TRUE 
+          ##high_rental    == TRUE  
+          )
+
+focus_table = viz_focus %>%
+  mutate( USD_amount = currency( Numeric_Cost, digits=0L)) %>%
+  select( County, 
+          med_age,
+          rent_own_ratio,
+          pop12_sqmi,
+          pop2012,
+          avg_count ,
+          per100k,                    # prevalence per 100k pop
+          USD_amount, 
+  ) %>% 
+  arrange( desc( rent_own_ratio )) %>%
+  rename(
+    `Pop Density`                 = pop12_sqmi,
+    `Total Pop`                   = pop2012,
+    `Num of Chronic cases`        = avg_count,
+    `Median Age`                  = med_age,
+    `Rent:Own Ratio`              = rent_own_ratio,
+    `Chronic Mortality per 100k`  = per100k,
+    `HCAI Fund in 2022`           = USD_amount
+  ) 
+
+# DT wk 11 reader pdf p6
+datatable( 
+           focus_table,
+           options = list(
+                            #order=list(4,'desc'),  ## arrange() above dictated order
+                            columnDefs=list(
+                                list(className='dt-center',targets=1:4) # col to center
+                            ),
+                            dom = 't'  # only want the table, nothing else  
+            ),
+            caption = "Table 1: Rural Counties with high median age, rental ratio, and chronic disease rate",
+            rownames=FALSE,
+          ) %>%
+  formatRound( 2,   1 ) %>%
+  formatRound( 3:4, 2 ) %>%
+  formatRound( 5:7, 0 ) %>%
+  formatRound( 8,   0 ) %>%
+  formatCurrency( 8, currency="$", digits=0 ) %>%
+  formatStyle(2,backgroundColor = styleInterval(c(avg_age),              c('white',grey_blue))) %>%     # highlite = older than state avg
+  formatStyle(3,backgroundColor = styleInterval(c(avg_rent_ratio),       c('white',grey_blue))) %>%     # highlite = rental ratio > state avg, none in here fit this criteria
+  formatStyle(7,backgroundColor = styleInterval(c(avg_chronic_mortality_per100k),c('white',grey_blue))) # highlite = higher chronic mortality than state avg
+
+```
+
+### Demographics and Funding of Rural Counties
+
+Figure 1 visualizes demographic and funding characteristics to further rank and narrow the selection of rural counties. For each county, the first two subplots depict median age and rent:own ratio, respectively. The third subplot depicts the HCAI funding amount each county received on projects with a status of "in construction" as of August 2022. Since all rural counties had no funding for projects "in closure", our team felt it was important to explore funding for projects "in construction". Together these scatter plots provide a visual comparison of where each county falls on the measurement scales of each criteria. 
+
+```{r, echo=F, include=T}
+rural_counties_funding <- funding_data %>% 
+  filter( `OSHPD Project Status` == "In Construction") %>%
+  filter( `Data Generation Date` == as_date( "2022-08-11")) %>%
+  inner_join(viz_focus, rural_counties_funding, by = "County")
+
+
+MedianAgePlot <- plot_ly(rural_counties_funding,
+                 x=~County,
+                  y=~`med_age`,
+                  name="Median Age",
+                  type="scatter")
+
+RentPlot <- plot_ly(rural_counties_funding,
+                 x=~County,
+                  y=~`rent_own_ratio`,
+                  name="Rent:Own Ratio",
+                  type="scatter")
+
+Funding_Construction_Plot <- plot_ly(rural_counties_funding,
+                 x=~County,
+                  y=~`Numeric_Cost.x`,
+                  name="HCAI Funding for Projects In Construction August 2022",
+                  type="scatter")
+
+print(MedianAgePlot)
+print(RentPlot)
+print(Funding_Construction_Plot)
+
+subplot(MedianAgePlot, RentPlot, Funding_Construction_Plot, shareY=F) %>%
+  layout(title = "Fig 1: Age, Rent, & Funding Characteristics of Rural Counties",
+         legend = list(orientation = "h", xanchor= "center", x = .5, y = -.5),
+         xaxis = list( title="County", categoryorder='total ascending'),
+         xaxis2= list(title="County", categoryorder='total ascending'), 
+         xaxis3= list(title="County", categoryorder='total ascending'),
+         yaxis = list(title = "Median Age"),
+         yaxis2 = list(title = "Rent:Own Ratio"), 
+         yaxis3 = list(title = "Funding($)"))
+```
+
+
+
+### Mortality Rate by County
+
+Figure 2 is a bar graph of Mortality Rate for Chronic diseases (as defined by CDC)
+across the 11 rural counties in CA (as defined by National Rural Development Partnership)
+
+The list for Chronic disease is selected according to CDC definition.  
+We note that we don't have disease data for Alpine or Sierra county.  
+
+```{r viz: chronic mortality rates by counties, echo=F, include=T}
+
+
+chronic_focus_counties = inner_join(
+    demographics_chronic,
+    rural_counties,
+    by = "County"                   ) %>%
+  mutate( ctyColor = case_when(
+    County == "Siskiyou" ~ "red",         # these colors were to color code county, not end up using them cuz of potential confusion
+    County == "Inyo"     ~ "darkorange" , 
+    County == "Mariposa" ~ "blue", 
+    County == "Plumas"   ~ "darkblue",
+    County == "Modoc"    ~ "darkcyan",
+    TRUE                 ~ grey_blue     # "rgb(187, 216, 228)" as used in lecture slides
+  ) ) 
+
+
+fig_mortality = plot_ly( 
+    data   = chronic_focus_counties ,
+    x      = ~County,
+    y      = ~per100k,
+    type   = 'bar',               
+    text   = ~paste( round( per100k, 0) ),
+    showlegend = F,
+    marker     = list(color = grey_blue)
+  ) %>%
+  add_trace(
+            name = 'Fig 2: Chronic Mortality Rates by Counties',
+            marker = list( color = "lightgrey", size=10,
+                           line  = list( color="grey", width=2 ) ),
+            #marker = list(color = ~ctyColor),
+            text = ~paste( "Total Average Yearly Cases:",   avg_count, 
+                           "<BR>2012 Population: ",         pop2012, 
+                           "<BR>Mortality Rate per 100k: ", round(per100k, 1) ),
+            hoverinfo = "text",
+            type      = "scatter"  ,
+            mode      = "markers"
+        ) %>%
+  layout(
+            title = "Fig 2: Chronic Mortality Rates For California's Rural Counties", 
+            yaxis = list( title="Mortality Rate per population of 100k"),
+            xaxis = list( title="County", categoryorder='total descending' )
+         )
+
+
+fig_mortality
+
+```
+
+
+### The Most Common Disease by Rural County
+
+This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available.  As we expand funding in the 5 select counties of focus, special emphasis should be placed on Heart Disease, as that's the most common chronic illness causing high mortality.
+
+*HTD= Heart Disease, CAN= Cancer
+
+```{r, echo=F, include=T}
+table_data_e<- inner_join(rural_not_rural, chronic_mortality_data, by= "County") %>% 
+select(c("County", "rural_class", "Cause","Count", "Year")) %>% filter(Year%in%2020) %>% 
+filter(rural_class=="rural") %>% 
+group_by(County,Cause) %>% summarize(count_cause=sum(Count)) %>% arrange(County,desc(c(count_cause))) %>% slice(c(1,11,21,31,41,51,61,71,81,91,101))
+
+table_data_e[1,2]<-"Not Available"
+table_data_e[9,2]<-"Not Available"
+
+#common_chronic<- kable(table_data_e, col.names=c("County", "Chronic Disease", "Number Reported"),
+#digits=0, booktabs=T, escape=F, align="ccc", caption="Most Common Chronic Disease by Rural County in 2020")
+#common_chronic
+
+datatable(table_data_e, options= list(
+  dom = 't',                    # only want the table, nothing else
+  order = list( 2, "desc" ),    # col# to sort the data by, start with 0!
+  lengthMenu= c(11,12)),
+  rownames=F,
+  caption = "Table 2: Common chronic diseases in rural counties of California",
+  colnames=c("County", "Chronic Disease", "Number Reported"))
+
+```
+
+
+
+```{r viz: funding for select counties, echo=F, include=F }
+
+# HCAI Funding for all 58 counties
+# This was left out in Milestone 4, could be a 
+# backup slide, but no such think in a report, so just ommited it.
+
+counties_funding_comp = funding_data %>%
+  filter( `OSHPD Project Status` == "In Closure"  ) %>%
+  filter( `Data Generation Date` ==
+            as_date( "2022-08-11" )
+            #as_date( "2020-01-01" )
+            #as_date( "2016-01-01" )
+          ) %>%
+  arrange( Numeric_Cost )
+
+#fig2 = plot_ly( data = funding_data_1county ) %>%
+#fig2 = plot_ly( data = funding_data_selected_counties ) %>%
+fig_hcai_all = plot_ly( data = counties_funding_comp ) %>%
+  add_trace(x = ~County,
+            y = ~Numeric_Cost,
+            type = 'bar',
+            name = 'Funding across 58 counties',
+            marker = list(color = 'rgb(187, 216, 228)'),
+            hoverinfo = "text",
+            text = ~paste(
+              County,
+              'US$', 
+              round(Numeric_Cost, 0) 
+              )  ) %>%
+   layout(
+            title="Funding across 58 counties",
+            yaxis = list( title="Funding"),
+            xaxis = list( title="County", categoryorder='total descending' )
+            
+         )
+
+fig_hcai_all
+
+
+```
+
+## Discussion 
+
+For the new public-private partnership to improve healthcare, the OHE director wanted to focus on rural areas that have high rental rates and high median age.  However, no county perfectly fit all three attributes.  Therefore, we offer visualizations and analysis with a holistic view of which counties best fit the selection criteria. Our first step narrowed down which counties are "rural" as defined by the National Rural Development Partnership, and had a median age higher than the state-wide average. These 8 counties are depicted in Table 1, which includes data on the other selection criteria. Here we see that none of these rural counties have HCAI funding for projects with an "In Closure" status for August 2022.
+
+Figure 1 provides a visual comparison of demographics and funding in rural counties. Most notable is that the third subplot displays funding received for projects "In Construction" as of August 2022. Both Inyo and Siskiyou reported funding of "In Construction" projects over 4 million dollars. Counties that reported zero dollar amounts in both categories include Alpine, Mariposa, Modoc, and Sierra. While Plumas and Trinity received funding, it was under 1 million dollars. Plumas and Mariposa rank in the top 5 counties across all three subplots. Sierra, Siskiyou, and Modoc rank high in two criteria categories each. Evaluating chronic mortality rates from Figure 2 helps us narrow down the selection even more. The 5 counties with the highest mortality rate include Siskiyou, Inyo, Mariposa, Plumas and Modoc. These counties align with those found to have high median age and large renter to owner ratio in Table 1 and Figure 1. Clearly, with Inyo and Siskiyou having such high chronic mortality rates, funding on health care improvements is necessary. Without adequate data on chronic mortality rates in Sierra and Alpine counties, it is hard to justify allocating funding at this time, as we don't know what would be most beneficial. We recommend further study in those areas to capture mortality and assess need for improvement projects. In the meantime, based on the information from counties that reported chronic disease information, heart disease seems to be the most common, so we now have a staring point for the future project we may want to focus on. 
+
+Ultimately, we propose funding development projects for healthcare facility improvement in Inyo, Siskiyou, Mariposa, Modoc, and Plumas counties.
+
+
+```{r aubrey-orig-plot-milestone4, include=F, echo=F}
+
+#Aubreys original plot from milestone 4 -- dont't feel like it adds much info.
+# placing here just in case you all feel differently
+#The following boxplot summarizes chronic disease mortality rates from all 
+#CA counties, grouped according to HCAI funding amounts for in closure projects 
+#as of August 2022. The funding amounts were categorized as "high" if they were 
+#above the mean amount, low if they were below the mean, and "no funding" if no 
+#funding for in closure projects was reported. 
+
+
+funding_chronic <- funding_data %>% 
+  filter( `OSHPD Project Status` == "In Closure") %>%
+  filter( `Data Generation Date` == as_date( "2022-08-11")) %>%
+  mutate(funding_amount = case_when(
+    Numeric_Cost > 12239849 ~ "High Funding", 
+    Numeric_Cost == 0 ~ "No Funding", 
+    Numeric_Cost < 12239849 ~ "Low Funding"
+  )) %>%
+  inner_join(demographics_chronic, funding_data_all_counties, by = "County") %>%
+  select(pct, County, funding_amount, rural_class, Numeric_Cost)
+
+plot_ly(
+  funding_chronic,
+  y=~pct,
+  color= ~funding_amount,
+  type="scatter"
+) %>%
+   layout(
+    title="Chronic Disease Mortality Rates & HCAI Funding",
+    yaxis=list(title="Chronic Disease Rate"))
+```
+
