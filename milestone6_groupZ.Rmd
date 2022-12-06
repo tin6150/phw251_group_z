@@ -1,13 +1,13 @@
 ---
 title: "Milestone 6 Group Z - DRAFT"
 output: html_document
-date: '2022-12-04'
+date: 'Due: 2022-12-11'
 author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho'
 ---
 
 This web report is accessible at
-[https://tin6150.github.io/phw251_group_z/milestone5_groupZ.html](https://tin6150.github.io/phw251_group_z/milestone5_groupZ.html)
-++FIXME++
+[https://tin6150.github.io/phw251_group_z/milestone6_groupZ.html](https://tin6150.github.io/phw251_group_z/milestone6_groupZ.html)
+++POSTING TBD++
 
 Code used for analsys and visual generation is available at 
 [our github repo](https://github.com/tin6150/phw251_group_z).
@@ -456,10 +456,7 @@ focus_dem %>% head( 13 )
 
 # First need to Join Chronics mortality data (by county, last 5 years)
 # and demographics data
-
-# @Lauren, 
-# here is where mortality rate  calculated
-# There is also a spot check around Line 510 
+# the avg_count was already div by 5 earlier in the code.
 
 demographics_chronic = left_join( demographics_data, 
                                   chronic_by_county, 
@@ -592,22 +589,23 @@ After cleaning and filtering the 3 datasets above, we joined them by county name
 
 ### Rural Counties Profiles
 
+Table 1 shows demographics and disease profile for the California's rural counties, which according to the 
+National Rural Development Partnership, are counties with population density below 20 person per square miles.  
+There are 11 counties in California that qualify per this definition, and they are highlighted in green.
 
-Table 1 shows CA counties that are rural
-(per National Rural Development Partnership's definition), 
-and have median age greater than the state-wide average.
-
-We have pre-sorted them by decreasing renter to owner ratio.  We observe that while none of these counties have rent:owner ratio higher than the state-wide average, they are still fairly high; and they have $0 in the latest HCAI funding that are in the Closure state.
+Highlighted in blue are places where age, renter to owner ratio, or Chronic Mortality is higher than the state-wide average.
+Note that mortality rate is calculated based on the latest available  population data: 2012.
+Number of Chronic cases for each county is actually the _*average*_ number of yearly cases between 2016-2020, and disease selection is per [CDC guideline](https://www.cdc.gov/chronicdisease/about/index.htm).  
 
 As background reference, across all 58 CA counties, we found these statistics:
 
  * average population density: 665 person per square mile.
  * average rent:own ratio is: 64.7%
  * average age is: 38.5
+ * average Chronic Mortality per 100k: 495
 
-Where age, renter to owner ratio, or Chronic Mortality is higher than the state-wide average, they are highlighted in blue.  
-Note that mortality rate is calculated based on the latest available  population data: 2012.
-Number of Chronic cases for each county is actually the average number of yearly cases between 2016-2020.
+We observe that while only one  of these counties have rent:owner ratio higher than the state-wide average, many are still fairly high.  
+They all have $0 in the latest HCAI funding that are in the Closure state.
 
 
 ```{r print quality table, echo=F, include=T }
@@ -617,8 +615,8 @@ grey_blue = "rgb(187, 216, 228)"  # custom color from lecture material
 
 # viz_fund_dem_chron is just fund_dem_chron with fewer columns
 viz_focus = viz_fund_dem_chron %>%
-  filter( rural_class      == "rural",
-          high_med_age     == TRUE 
+  filter( rural_class      == "rural"          # only rural has 11 counties, should be less confusing
+          #high_med_age     == TRUE            # this filter cut down to 8 counties, was said to be confusing  #m6delta
           ##high_rental    == TRUE  
           )
 
@@ -633,16 +631,19 @@ focus_table = viz_focus %>%
           per100k,                    # prevalence per 100k pop
           USD_amount, 
   ) %>% 
-  arrange( desc( rent_own_ratio )) %>%
+  #arrange( desc( rent_own_ratio )) %>% 
+  arrange( desc( med_age )) %>%   ## #m6delta
   rename(
     `Pop Density`                 = pop12_sqmi,
     `Total Pop`                   = pop2012,
-    `Num of Chronic cases`        = avg_count,
+    `Num of Chronic death`        = avg_count,
     `Median Age`                  = med_age,
     `Rent:Own Ratio`              = rent_own_ratio,
     `Chronic Mortality per 100k`  = per100k,
     `HCAI Fund in 2022`           = USD_amount
   ) 
+
+rural_density_def = 20  ## cut off definition for rural county density  #m6delta 
 
 # DT wk 11 reader pdf p6
 datatable( 
@@ -652,9 +653,10 @@ datatable(
                             columnDefs=list(
                                 list(className='dt-center',targets=1:4) # col to center
                             ),
+                            lengthMenu= c(11,12),
                             dom = 't'  # only want the table, nothing else  
             ),
-            caption = "Table 1: Rural Counties with high median age, rental ratio, and chronic disease rate",
+            caption = "Table 1: Demographics and Mortality Profiles of California's 11 Rural Counties",
             rownames=FALSE,
           ) %>%
   formatRound( 2,   1 ) %>%
@@ -663,7 +665,8 @@ datatable(
   formatRound( 8,   0 ) %>%
   formatCurrency( 8, currency="$", digits=0 ) %>%
   formatStyle(2,backgroundColor = styleInterval(c(avg_age),              c('white',grey_blue))) %>%     # highlite = older than state avg
-  formatStyle(3,backgroundColor = styleInterval(c(avg_rent_ratio),       c('white',grey_blue))) %>%     # highlite = rental ratio > state avg, none in here fit this criteria
+  formatStyle(3,backgroundColor = styleInterval(c(avg_rent_ratio),       c('white',grey_blue))) %>%     # highlite = rental ratio > state avg, none in here fit this criteria for 8 counties, 1 fit for 11 counties selection
+  formatStyle(4,backgroundColor = styleInterval(c(rural_density_def),       c('lightgreen','white'))) %>%     # highlite = def of rural #m6delta
   formatStyle(7,backgroundColor = styleInterval(c(avg_chronic_mortality_per100k),c('white',grey_blue))) # highlite = higher chronic mortality than state avg
 
 ```
@@ -714,13 +717,15 @@ subplot(MedianAgePlot, RentPlot, Funding_Construction_Plot, shareY=F) %>%
 
 
 
-### Mortality Rate by County
+### Mortality Rate of Rural County
 
-Figure 2 is a bar graph of Mortality Rate for Chronic diseases (as defined by CDC)
-across the 11 rural counties in CA (as defined by National Rural Development Partnership)
+Figure 2 is a bar graph of Mortality Rate for Chronic diseases
+across the 11 rural counties in CA (as defined by National Rural Development Partnership, 20 person/sq.mile)
 
-The list for Chronic disease is selected according to CDC definition.  
+The list for Chronic disease is selected according to [CDC definition](https://www.cdc.gov/chronicdisease/about/index.htm).  
 We note that we don't have disease data for Alpine or Sierra county.  
+
+The Mortality Rate numbers are running yearly averages over the 5 year period of 2016-2020.
 
 ```{r viz: chronic mortality rates by counties, echo=F, include=T}
 
@@ -850,7 +855,7 @@ For the new public-private partnership to improve healthcare, the OHE director w
 
 Figure 1 provides a visual comparison of demographics and funding in rural counties. Most notable is that the third subplot displays funding received for projects "In Construction" as of August 2022. Both Inyo and Siskiyou reported funding of "In Construction" projects over 4 million dollars. Counties that reported zero dollar amounts in both categories include Alpine, Mariposa, Modoc, and Sierra. While Plumas and Trinity received funding, it was under 1 million dollars. Plumas and Mariposa rank in the top 5 counties across all three subplots. Sierra, Siskiyou, and Modoc rank high in two criteria categories each. Evaluating chronic mortality rates from Figure 2 helps us narrow down the selection even more. The 5 counties with the highest mortality rate include Siskiyou, Inyo, Mariposa, Plumas and Modoc. These counties align with those found to have high median age and large renter to owner ratio in Table 1 and Figure 1. Clearly, with Inyo and Siskiyou having such high chronic mortality rates, funding on health care improvements is necessary. Without adequate data on chronic mortality rates in Sierra and Alpine counties, it is hard to justify allocating funding at this time, as we don't know what would be most beneficial. We recommend further study in those areas to capture mortality and assess need for improvement projects. In the meantime, based on the information from counties that reported chronic disease information, heart disease seems to be the most common, so we now have a staring point for the future project we may want to focus on. 
 
-Ultimately, we propose funding development projects for healthcare facility improvement in Inyo, Siskiyou, Mariposa, Modoc, and Plumas counties.
+Ultimately, we propose funding development projects for healthcare facility improvement in Inyo, Mariposa, Modoc, Plumas and Siskiyou counties.
 
 
 ```{r aubrey-orig-plot-milestone4, include=F, echo=F}
