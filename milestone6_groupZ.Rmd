@@ -575,12 +575,12 @@ We used 3 datasets for this project:
  * CA mortality surveillance
  * HCAI healthcare construction funding
  
-The first dataset is from the 2012 Census and contains demographics info for each of the 58 counties in California.  It includes info such as population per square mile, median age, number of households who are renters vs owners, ethnicity, genders, etc.   We calculated the renter to owner ratio for each county. We then calculated the average age and population density for the whole state and visually inspected the data to see how each county stack up. We ended up using the National Rural Development Partnership’s definition to determine if a given county's population density is to be classified as rural, for which there were 11.  
+The first dataset is from the 2012 Census and contains demographics information for each of the 58 counties in California. It includes information such as population per square mile, median age, number of households who are renters vs owners, ethnicity, genders, etc. We calculated the renter to owner ratio for each county. We then calculated the average age and population density for the whole state and visually inspected the data to see how each county stack up. We ended up using the National Rural Development Partnership’s definition to determine if a given county's population density is to be classified as rural, for which there were 11.  
 
 
 The second dataset is the mortality surveillance obtained from the CA Open Data Portal.  It contains a breakdown of total mortality for each county by 15 disease areas.  We used the CDC definition to filter for the chronic diseases, for which 10 fit the criteria.  The data range from 2014 to 2020, but we were tasked to focus on the last 5 years, thus we applied a filter with `Year >= 2016`.  As tasked, we also performed filters with `Geography_Type == "Occurrence"`  and used `Strata == "Total Population"` to avoid over counting.  Any missing data were replaced with 0.  Once the data was cleaned, we summed all the disease occurrences within each county.  We joined this with the demographics data to obtain a mortality rate of chronic conditions over 5 years for each county.
 
-The third dataset is the HCAI funding, also obtained from the CA Open Data Portal.  It contains healthcare spending for each county in 4 stages of project progression, updated about every 2 weeks.  We focused on the latest available data, which was Aug 11, 2022, and those with state of "In Closure".  Many rural counties showed up with $0 amount, and we went back to double check our selection code.  It checked out, much fundings are in large populous counties such as those around the greater Los Angeles and San Francisco.  It was not that rural counties had no funding, there were fundings for example in the "In Construction" phase, but we decided to focus on "In Closure" to help our improvement plan to drive new spending for rural counties with high and variable mortality rates.
+The third dataset is the HCAI funding, also obtained from the CA Open Data Portal.  It contains healthcare spending for each county in 4 stages of project progression, updated about every 2 weeks.  We focused on the latest available data, which was Aug 11, 2022, and those with state of "In Closure".  Many rural counties showed up with $0 amount. As we went back to double check our selection code, we confirmed that funding was higher in large populous counties such as those around the greater Los Angeles and San Francisco. However, we also noted that while many rural counties had no funding for "In Closure", they did report funding for projects "In Construction". While our main variable focuses on "In Closure" to help our improvement plan drive new spending for rural counties with high and variable mortality rates, we also compared "In Construction" funding to help narrow selection.
 
 After cleaning and filtering the 3 datasets above, we joined them by county name, whereby we can see which counties had high renters, high chronic mortality rates, and the funding they received.  
 
@@ -712,7 +712,7 @@ subplot(MedianAgePlot, RentPlot, Funding_Construction_Plot, shareY=F) %>%
          xaxis3= list(title="County", categoryorder='total ascending'),
          yaxis = list(title = "Median Age"),
          yaxis2 = list(title = "Rent:Own Ratio"), 
-         yaxis3 = list(title = "Funding($)"))
+         yaxis3 = list(title = "In Construction Funding($)"))
 ```
 
 
