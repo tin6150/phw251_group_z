@@ -720,7 +720,7 @@ subplot(MedianAgePlot, RentPlot, Funding_Construction_Plot, shareY=F) %>%
 ### Mortality Rate of Rural County
 
 Figure 2 is a bar graph of Mortality Rate for Chronic diseases
-across the 11 rural counties in CA (as defined by National Rural Development Partnership, 20 person/sq.mile)
+across the 11 rural counties in CA (as defined by [National Rural Development Partnership](https://www.washingtonpost.com/politics/the-federal-definition-of-rural--times-15/2013/06/08/a39e46a8-cd4a-11e2-ac03-178510c9cc0a_story.html), 20 person/sq.mile)
 
 The list for Chronic disease is selected according to [CDC definition](https://www.cdc.gov/chronicdisease/about/index.htm).  
 We note that we don't have disease data for Alpine or Sierra county.  
@@ -808,7 +808,7 @@ datatable(table_data_e, options= list(
 
 
 
-```{r, trying to combine fig2 + table2, include=F, echo=FALSE}
+```{r, trying to combine fig2 + table2, include=T, echo=F}
 
 #### tmp, see if i like it first
 #### trying to combine fig2 + table2
@@ -821,11 +821,17 @@ chronic_5yrAvg__M6 = chronic_mortality_data %>%
   filter(  Geography_Type == "Occurrence" ) %>%
   select( -Geography_Type ) %>% # Geo type restricted to "Occurrence"
   filter( Year >= 2016 )     %>%   # 2016-2020 = 5 years
-  group_by( Year,County,Cause ) %>%                      #m6delta Year instead of County
+  group_by( County,Cause_Desc ) %>%                      #m6delta add:  Cause_Desc  # no more year
   summarize( sum_count5 = sum(Count),
              avg_count  = sum(Count) / 5   # this avg over the 5 years
              #County, Cause
-             ) 
+             ) %>%  #1210  # oh no need, did... allCauseAvgCount
+  group_by( County ) #%>%
+  #summarize( All_Causes_sum = sum(_count5),        # this is a 5 year count across all diseases for each county used as total by Fig 2.
+  #           Year,Cause_Desc,sum_count5,avg_count )
+
+
+
 
 # line463 change to this
 ## ++FIXME++   no, this is broken.  the sum would be over 5 years... for all diseases...  above need to tune to group_by disease before doing sum/count...  ...maybe fixed...
@@ -836,9 +842,9 @@ demographics_chronic_M6 = left_join( demographics_data,
   mutate( per100k = ( avg_count / pop2012 ) * 100000 ) %>%
   #group_by( County,Year )   %>%                      ## fidddle here to get right height ++
   group_by( County )   %>%
-  summarize( allCauseAvgCount = sum(per100k) / 5 ,  ## should get the total height of the bar here -- ie across all disease
+  summarize( allCauseAvgCount = sum(per100k)  , #dont /5 ## should get the total height of the bar here -- ie across all disease  
              per100k,
-             County,Year,Cause,avg_count,pop2012
+             County,Cause_Desc,avg_count,pop2012  #,All_Causes_sum ,Year
              )  
 
 
@@ -870,7 +876,7 @@ fig_mortalityM6 = plot_ly(
     data   = chronic_focus_countiesM6 ,
     x      = ~County,
     y      = ~per100k,
-    color  = ~Cause,     #m6delta
+    color  = ~Cause_Desc,     #m6delta    ##++ try to get Cause_Desc instead 
     type   = 'bar'
     #,               
     #text   = ~paste( round( per100k, 0) ),
@@ -878,31 +884,20 @@ fig_mortalityM6 = plot_ly(
     #marker     = list(color = grey_blue)
   ) %>%
   add_trace(
+            y = ~ allCauseAvgCount,
             name = 'Fig 2: Chronic Mortality Rates by Counties',
             marker = list( color = "lightgrey", size=10,
                            line  = list( color="grey", width=2 ) ),
             #marker = list(color = ~ctyColor),
-            text = ~paste( "Total Average Yearly Cases:",   avg_count, 
-                           "<BR>2012 Population: ",         pop2012, 
-                           "<BR>Mortality Rate per 100k: ", round(per100k, 1) ),
-            type      = "bar"  ,
-            #mode      = "markers"
-            hoverinfo = "text"
-        ) %>%
-  # can there be 2 traces?   but they are not overlay, now height is doubled.   may not get what i want even if get bullet height right ++FIXME++
-  add_trace(
-            #name = 'Fig 2: Chronic Mortality Rates by Counties',
-            x      = ~County,
-            y      = ~allCauseAvgCount,
-            marker = list( color = "lightgrey", size=10,
-                           line  = list( color="grey", width=2 ) ),
-            #marker = list(color = ~ctyColor),
-            text = ~paste( "Total Average Yearly Cases:",   avg_count, 
-                           "<BR>2012 Population: ",         pop2012, 
-                           "<BR>Mortality Rate per 100k: ", round(per100k, 1) ),
-            hoverinfo = "text",
+            text = ~paste( #"Total Average Yearly Deaths:",  avg_count, 
+                           "Mortality Rate per 100k: "   ,  round(allCauseAvgCount, 1),   # not per100k col anymore
+                           "<BR>2012 Population: "       ,  pop2012, 
+                           "<BR>Population per sq.mile: ",  round(pop12_sqmi,2) 
+            ),
             type      = "scatter"  ,
-            mode      = "markers"
+            mode      = "markers",
+            showlegend = F,
+            hoverinfo = "text"
         ) %>%
   layout(
             barmode="stack",
@@ -959,7 +954,7 @@ fig_hcai_all
 
 ## Discussion 
 
-For the new public-private partnership to improve healthcare, the OHE director wanted to focus on rural areas that have high rental rates and high median age.  However, no county perfectly fit all three attributes.  Therefore, we offer visualizations and analysis with a holistic view of which counties best fit the selection criteria. Our first step narrowed down which counties are "rural" as defined by the National Rural Development Partnership, and had a median age higher than the state-wide average. These 8 counties are depicted in Table 1, which includes data on the other selection criteria. Here we see that none of these rural counties have HCAI funding for projects with an "In Closure" status for August 2022.
+For the new public-private partnership to improve healthcare, the OHE director wanted to focus on rural areas that have high rental rates and high median age.  However, no county perfectly fit all three attributes.  Therefore, we offer visualizations and analysis with a holistic view of which counties best fit the selection criteria. Our first step narrowed down which counties are "rural" as defined by the [National Rural Development Partnership](https://www.washingtonpost.com/politics/the-federal-definition-of-rural--times-15/2013/06/08/a39e46a8-cd4a-11e2-ac03-178510c9cc0a_story.html), and had a median age higher than the state-wide average. These 8 counties are depicted in Table 1, which includes data on the other selection criteria. Here we see that none of these rural counties have HCAI funding for projects with an "In Closure" status for August 2022.
 
 Figure 1 provides a visual comparison of demographics and funding in rural counties. Most notable is that the third subplot displays funding received for projects "In Construction" as of August 2022. Both Inyo and Siskiyou reported funding of "In Construction" projects over 4 million dollars. Counties that reported zero dollar amounts in both categories include Alpine, Mariposa, Modoc, and Sierra. While Plumas and Trinity received funding, it was under 1 million dollars. Plumas and Mariposa rank in the top 5 counties across all three subplots. Sierra, Siskiyou, and Modoc rank high in two criteria categories each. Evaluating chronic mortality rates from Figure 2 helps us narrow down the selection even more. The 5 counties with the highest mortality rate include Siskiyou, Inyo, Mariposa, Plumas and Modoc. These counties align with those found to have high median age and large renter to owner ratio in Table 1 and Figure 1. Clearly, with Inyo and Siskiyou having such high chronic mortality rates, funding on health care improvements is necessary. Without adequate data on chronic mortality rates in Sierra and Alpine counties, it is hard to justify allocating funding at this time, as we don't know what would be most beneficial. We recommend further study in those areas to capture mortality and assess need for improvement projects. In the meantime, based on the information from counties that reported chronic disease information, heart disease seems to be the most common, so we now have a staring point for the future project we may want to focus on. 
 
