@@ -1,5 +1,5 @@
 ---
-title: "Milestone 6 Group Z - DRAFT"
+title: "Milestone 6 Group Z"
 output: html_document
 date: 'Due: 2022-12-11'
 author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho'
@@ -7,7 +7,6 @@ author:   'Aubrey Robinson, Elizabeth Guzman, Tin Ho'
 
 This web report is accessible at
 [https://tin6150.github.io/phw251_group_z/milestone6_groupZ.html](https://tin6150.github.io/phw251_group_z/milestone6_groupZ.html)
-++POSTING TBD++
 
 Code used for analsys and visual generation is available at 
 [our github repo](https://github.com/tin6150/phw251_group_z).
@@ -575,10 +574,10 @@ We used 3 datasets for this project:
  * CA mortality surveillance
  * HCAI healthcare construction funding
  
-The first dataset is from the 2012 Census and contains demographics information for each of the 58 counties in California. It includes information such as population per square mile, median age, number of households who are renters vs owners, ethnicity, genders, etc. We calculated the renter to owner ratio for each county. We then calculated the average age and population density for the whole state and visually inspected the data to see how each county stack up. We ended up using the National Rural Development Partnership’s definition to determine if a given county's population density is to be classified as rural, for which there were 11.  
+The first dataset is from the 2012 Census and contains demographics information for each of the 58 counties in California. It includes information such as population per square mile, median age, number of households who are renters vs owners, ethnicity, genders, etc. We calculated the renter to owner ratio for each county. We then calculated the average age and population density for the whole state and visually inspected the data to see how each county stack up. We ended up using the [National Rural Development Partnership’s definition](https://www.washingtonpost.com/politics/the-federal-definition-of-rural--times-15/2013/06/08/a39e46a8-cd4a-11e2-ac03-178510c9cc0a_story.html) to determine if a given county's population density is to be classified as rural, for which there were 11.  
 
 
-The second dataset is the mortality surveillance obtained from the CA Open Data Portal.  It contains a breakdown of total mortality for each county by 15 disease areas.  We used the CDC definition to filter for the chronic diseases, for which 10 fit the criteria.  The data range from 2014 to 2020, but we were tasked to focus on the last 5 years, thus we applied a filter with `Year >= 2016`.  As tasked, we also performed filters with `Geography_Type == "Occurrence"`  and used `Strata == "Total Population"` to avoid over counting.  Any missing data were replaced with 0.  Once the data was cleaned, we summed all the disease occurrences within each county.  We joined this with the demographics data to obtain a mortality rate of chronic conditions over 5 years for each county.
+The second dataset is the mortality surveillance obtained from the CA Open Data Portal.  It contains a breakdown of total mortality for each county by 15 disease areas.  We used the [CDC definition of chronic diseases](https://www.cdc.gov/chronicdisease/about/index.htm) as filter, for which 10 fit the criteria.  The data range from 2014 to 2020, but we were tasked to focus on the last 5 years, thus we applied a filter with `Year >= 2016`.  As tasked, we also performed filters with `Geography_Type == "Occurrence"`  and used `Strata == "Total Population"` to avoid over counting.  Any missing data were replaced with 0.  Once the data was cleaned, we summed all the disease occurrences within each county.  We joined this with the demographics data to obtain a mortality rate of chronic conditions over 5 years for each county.
 
 The third dataset is the HCAI funding, also obtained from the CA Open Data Portal.  It contains healthcare spending for each county in 4 stages of project progression, updated about every 2 weeks.  We focused on the latest available data, which was Aug 11, 2022, and those with state of "In Closure".  Many rural counties showed up with $0 amount. As we went back to double check our selection code, we confirmed that funding was higher in large populous counties such as those around the greater Los Angeles and San Francisco. However, we also noted that while many rural counties had no funding for "In Closure", they did report funding for projects "In Construction". While our main variable focuses on "In Closure" to help our improvement plan drive new spending for rural counties with high and variable mortality rates, we also compared "In Construction" funding to help narrow selection.
 
@@ -590,7 +589,7 @@ After cleaning and filtering the 3 datasets above, we joined them by county name
 ### Rural Counties Profiles
 
 Table 1 shows demographics and disease profile for the California's rural counties, which according to the 
-National Rural Development Partnership, are counties with population density below 20 person per square miles.  
+[National Rural Development Partnership](https://www.washingtonpost.com/politics/the-federal-definition-of-rural--times-15/2013/06/08/a39e46a8-cd4a-11e2-ac03-178510c9cc0a_story.html), are counties with population density below 20 person per square miles.  
 There are 11 counties in California that qualify per this definition, and they are highlighted in green.
 
 Highlighted in blue are places where age, renter to owner ratio, or Chronic Mortality is higher than the state-wide average.
@@ -799,13 +798,17 @@ fig_mortalityM6 = plot_ly(
 fig_mortalityM6
 
 ```
+
+```{r, echo=F, include=F}
+
 ### The Most Common Disease by Rural County
 
-This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available.  As we expand funding in the 5 select counties of focus, special emphasis should be placed on Heart Disease, as that's the most common chronic illness causing high mortality.
+#This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available.  As we expand funding in the 5 select counties of focus, special emphasis should be placed on Heart Disease, as that's the most common chronic illness causing high mortality.
 
-*HTD= Heart Disease, CAN= Cancer
+#*HTD= Heart Disease, CAN= Cancer
 
-```{r, echo=F, include=T}
+
+
 table_data_e<- inner_join(rural_not_rural, chronic_mortality_data, by= "County") %>% 
 select(c("County", "rural_class", "Cause","Count", "Year")) %>% filter(Year%in%2020) %>% 
 filter(rural_class=="rural") %>% 
@@ -875,11 +878,11 @@ fig_hcai_all
 
 ## Discussion 
 
-For the new public-private partnership to improve healthcare, the OHE director wanted to focus on rural areas that have high rental rates and high median age.  However, no county perfectly fit all three attributes.  Therefore, we offer visualizations and analysis with a holistic view of which counties best fit the selection criteria. Our first step narrowed down which counties are "rural" as defined by the [National Rural Development Partnership](https://www.washingtonpost.com/politics/the-federal-definition-of-rural--times-15/2013/06/08/a39e46a8-cd4a-11e2-ac03-178510c9cc0a_story.html), and had a median age higher than the state-wide average. These 8 counties are depicted in Table 1, which includes data on the other selection criteria. Here we see that none of these rural counties have HCAI funding for projects with an "In Closure" status for August 2022.
+For the new public-private partnership to improve healthcare, the OHE director wanted to focus on rural areas that have high rental rates and high median age.  However, no county perfectly fit all three attributes.  Therefore, we offer visualizations and analysis with a holistic view of which counties best fit the selection criteria. Our first step narrowed down which counties are "rural" as defined by the [National Rural Development Partnership](https://www.washingtonpost.com/politics/the-federal-definition-of-rural--times-15/2013/06/08/a39e46a8-cd4a-11e2-ac03-178510c9cc0a_story.html).  Table 1 list these the 11 rural counties, as well as highlight those that have a median age higher than the state-wide average (there were 8, and the ONE director wants to narrow down to a list of 5).
 
 Using Figures 1 and 2 we compared demographics, funding  and chronic mortality rates between counties. Notably, Figure 1, subplot 3, displays funding received for projects "In Construction" as of August 2022. Lassen, Inyo and Siskiyou reported funding of "In Construction" projects over 4 million dollars. Counties that reported zero dollar amounts in both categories include Alpine, Colusa, Mariposa, Mono, Modoc, and Sierra. While Plumas and Trinity received funding, it was under 1 million dollars.  Together with Figure 2, we can see that Trinity has a lower chronic mortality rate than Plumas. We also see that Lassen, Colusa and Mono have lower chronic mortality rates, as well as median ages below the state-wide average. Since Lassen also has high funding of projects in construction, we do not recommend funding the county at this time. Additionally, without adequate data on chronic mortality rates in Sierra and Alpine counties, it is hard to justify allocating funding at this time, as we don't know what would be most beneficial. We recommend further study in those areas to capture mortality and assess need for improvement projects. 
 
-The counties we selected have the highest chronic mortality rates of rural counties, have median ages above the state-wide average, and fit at least one other selection criteria better than those not selected. We propose funding development projects for healthcare facility improvement in Inyo, Mariposa, Modoc, Plumas and Siskiyou counties. As shown in Table 2, we recommend these future improvement projects focus on heart disease, as it is the most common disease reported.
+The counties we selected have the highest chronic mortality rates of rural counties, have median ages above the state-wide average, and fit at least one other selection criteria better than those not selected. We propose funding development projects for healthcare facility improvement in Inyo, Mariposa, Modoc, Plumas and Siskiyou counties. As shown in Figure 2, we recommend these future improvement projects focus on heart disease and cancer, as they the most common disease reported.
 
 
 ```{r aubrey-orig-plot-milestone4, include=F, echo=F}
