@@ -775,38 +775,7 @@ fig_mortality = plot_ly(
 fig_mortality
 
 ```
-
-
-### The Most Common Disease by Rural County
-
-This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available.  As we expand funding in the 5 select counties of focus, special emphasis should be placed on Heart Disease, as that's the most common chronic illness causing high mortality.
-
-*HTD= Heart Disease, CAN= Cancer
-
-```{r, echo=F, include=T}
-table_data_e<- inner_join(rural_not_rural, chronic_mortality_data, by= "County") %>% 
-select(c("County", "rural_class", "Cause","Count", "Year")) %>% filter(Year%in%2020) %>% 
-filter(rural_class=="rural") %>% 
-group_by(County,Cause) %>% summarize(count_cause=sum(Count)) %>% arrange(County,desc(c(count_cause))) %>% slice(c(1,11,21,31,41,51,61,71,81,91,101))
-
-table_data_e[1,2]<-"Not Available"
-table_data_e[9,2]<-"Not Available"
-
-#common_chronic<- kable(table_data_e, col.names=c("County", "Chronic Disease", "Number Reported"),
-#digits=0, booktabs=T, escape=F, align="ccc", caption="Most Common Chronic Disease by Rural County in 2020")
-#common_chronic
-
-datatable(table_data_e, options= list(
-  dom = 't',                    # only want the table, nothing else
-  order = list( 2, "desc" ),    # col# to sort the data by, start with 0!
-  lengthMenu= c(11,12)),
-  rownames=F,
-  caption = "Table 2: Common chronic diseases in rural counties of California",
-  colnames=c("County", "Chronic Disease", "Number Reported"))
-
-```
-
-
+##### new Figure 2 with embeded disease break down from Table 2.
 
 ```{r, trying to combine fig2 + table2, include=T, echo=F}
 
@@ -910,6 +879,38 @@ fig_mortalityM6 = plot_ly(
 fig_mortalityM6
 
 ```
+### The Most Common Disease by Rural County
+
+This table shows the most common chronic disease in each of the rural counties, while also showing the number of people who have the illness in the year 2020. The counties of Alpine and Sierra did not have chronic disease data available.  As we expand funding in the 5 select counties of focus, special emphasis should be placed on Heart Disease, as that's the most common chronic illness causing high mortality.
+
+*HTD= Heart Disease, CAN= Cancer
+
+```{r, echo=F, include=T}
+table_data_e<- inner_join(rural_not_rural, chronic_mortality_data, by= "County") %>% 
+select(c("County", "rural_class", "Cause","Count", "Year")) %>% filter(Year%in%2020) %>% 
+filter(rural_class=="rural") %>% 
+group_by(County,Cause) %>% summarize(count_cause=sum(Count)) %>% arrange(County,desc(c(count_cause))) %>% slice(c(1,11,21,31,41,51,61,71,81,91,101))
+
+table_data_e[1,2]<-"Not Available"
+table_data_e[9,2]<-"Not Available"
+
+#common_chronic<- kable(table_data_e, col.names=c("County", "Chronic Disease", "Number Reported"),
+#digits=0, booktabs=T, escape=F, align="ccc", caption="Most Common Chronic Disease by Rural County in 2020")
+#common_chronic
+
+datatable(table_data_e, options= list(
+  dom = 't',                    # only want the table, nothing else
+  order = list( 2, "desc" ),    # col# to sort the data by, start with 0!
+  lengthMenu= c(11,12)),
+  rownames=F,
+  caption = "Table 2: Common chronic diseases in rural counties of California",
+  colnames=c("County", "Chronic Disease", "Number Reported"))
+
+```
+
+
+
+
 
 ```{r viz: funding for select counties, echo=F, include=F }
 
