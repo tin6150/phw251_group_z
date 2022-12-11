@@ -727,57 +727,8 @@ We note that we don't have disease data for Alpine or Sierra county.
 
 The Mortality Rate numbers are running yearly averages over the 5 year period of 2016-2020.
 
-```{r viz: chronic mortality rates by counties, echo=F, include=T}
 
-
-chronic_focus_counties = inner_join(
-    demographics_chronic,
-    rural_counties,
-    by = "County"                   ) %>%
-  mutate( ctyColor = case_when(
-    County == "Siskiyou" ~ "red",         # these colors were to color code county, not end up using them cuz of potential confusion
-    County == "Inyo"     ~ "darkorange" , 
-    County == "Mariposa" ~ "blue", 
-    County == "Plumas"   ~ "darkblue",
-    County == "Modoc"    ~ "darkcyan",
-    TRUE                 ~ grey_blue     # "rgb(187, 216, 228)" as used in lecture slides
-  ) ) 
-
-
-fig_mortality = plot_ly( 
-    data   = chronic_focus_counties ,
-    x      = ~County,
-    y      = ~per100k,
-    type   = 'bar',               
-    text   = ~paste( round( per100k, 0) ),
-    showlegend = F,
-    marker     = list(color = grey_blue)
-  ) %>%
-  add_trace(
-            name = 'Fig 2: Chronic Mortality Rates by Counties',
-            marker = list( color = "lightgrey", size=10,
-                           line  = list( color="grey", width=2 ) ),
-            #marker = list(color = ~ctyColor),
-            text = ~paste( "Total Average Yearly Cases:",   avg_count, 
-                           "<BR>2012 Population: ",         pop2012, 
-                           "<BR>Mortality Rate per 100k: ", round(per100k, 1) ),
-            hoverinfo = "text",
-            type      = "scatter"  ,
-            mode      = "markers"
-        ) %>%
-  layout(
-            title = "Fig 2: Chronic Mortality Rates For California's Rural Counties", 
-            yaxis = list( title="Mortality Rate per population of 100k"),
-            xaxis = list( title="County", categoryorder='total descending' )
-         )
-
-
-fig_mortality
-
-```
-##### new Figure 2 with embeded disease break down from Table 2.
-
-```{r, trying to combine fig2 + table2, include=T, echo=F}
+```{r, New fig2 which embed table2, include=T, echo=F}
 
 #### tmp, see if i like it first
 #### trying to combine fig2 + table2
@@ -790,48 +741,24 @@ chronic_5yrAvg__M6 = chronic_mortality_data %>%
   filter(  Geography_Type == "Occurrence" ) %>%
   select( -Geography_Type ) %>% # Geo type restricted to "Occurrence"
   filter( Year >= 2016 )     %>%   # 2016-2020 = 5 years
-  group_by( County,Cause_Desc ) %>%                      #m6delta add:  Cause_Desc  # no more year
+  group_by( County,Cause_Desc ) %>%          #m6delta new grouping
   summarize( sum_count5 = sum(Count),
              avg_count  = sum(Count) / 5   # this avg over the 5 years
              #County, Cause
-             ) %>%  #1210  # oh no need, did... allCauseAvgCount
-  group_by( County ) #%>%
-  #summarize( All_Causes_sum = sum(_count5),        # this is a 5 year count across all diseases for each county used as total by Fig 2.
-  #           Year,Cause_Desc,sum_count5,avg_count )
+             ) 
 
-
-
-
-# line463 change to this
-## ++FIXME++   no, this is broken.  the sum would be over 5 years... for all diseases...  above need to tune to group_by disease before doing sum/count...  ...maybe fixed...
+# from line463, maybe replace it with  this new code
 demographics_chronic_M6 = left_join( demographics_data, 
                                   chronic_5yrAvg__M6,       ##chronic_by_county, 
                                   by = "County"      ) %>% 
   mutate( pct     = ( avg_count / pop2012 ) * 100 ) %>%
   mutate( per100k = ( avg_count / pop2012 ) * 100000 ) %>%
-  #group_by( County,Year )   %>%                      ## fidddle here to get right height ++
   group_by( County )   %>%
-  summarize( allCauseAvgCount = sum(per100k)  , #dont /5 ## should get the total height of the bar here -- ie across all disease  
+  summarize( allCauseAvgCount = sum(per100k)  , # this is the total height of the bar here, ie across all disease  
              per100k,
              County,Cause_Desc,avg_count,pop2012  #,All_Causes_sum ,Year
              )  
 
-
-
-
-## would  no longer need this, use new block next ++FIXME++
-chronic_focus_countiesM6_xx = inner_join(
-    demographics_chronic,
-    rural_counties,
-    by = "County"                   ) %>%
-  mutate( ctyColor = case_when(
-    County == "Siskiyou" ~ "red",         # these colors were to color code county, not end up using them cuz of potential confusion
-    County == "Inyo"     ~ "darkorange" , 
-    County == "Mariposa" ~ "blue", 
-    County == "Plumas"   ~ "darkblue",
-    County == "Modoc"    ~ "darkcyan",
-    TRUE                 ~ grey_blue     # "rgb(187, 216, 228)" as used in lecture slides
-  ) ) 
 
 chronic_focus_countiesM6 = inner_join(
     demographics_chronic_M6,  
@@ -839,26 +766,19 @@ chronic_focus_countiesM6 = inner_join(
     by = "County"                   ) 
 
 
-
-
 fig_mortalityM6 = plot_ly( 
     data   = chronic_focus_countiesM6 ,
     x      = ~County,
     y      = ~per100k,
-    color  = ~Cause_Desc,     #m6delta    ##++ try to get Cause_Desc instead 
+    color  = ~Cause_Desc,     #m6delta   
     type   = 'bar'
-    #,               
-    #text   = ~paste( round( per100k, 0) ),
-    #showlegend = F,
-    #marker     = list(color = grey_blue)
   ) %>%
   add_trace(
             y = ~ allCauseAvgCount,
             name = 'Fig 2: Chronic Mortality Rates by Counties',
             marker = list( color = "lightgrey", size=10,
                            line  = list( color="grey", width=2 ) ),
-            #marker = list(color = ~ctyColor),
-            text = ~paste( #"Total Average Yearly Deaths:",  avg_count, 
+            text = ~paste( 
                            "Mortality Rate per 100k: "   ,  round(allCauseAvgCount, 1),   # not per100k col anymore
                            "<BR>2012 Population: "       ,  pop2012, 
                            "<BR>Population per sq.mile: ",  round(pop12_sqmi,2) 
