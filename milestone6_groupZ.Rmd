@@ -11,10 +11,12 @@ This web report is accessible at
 Code used for analsys and visual generation is available at 
 [our github repo](https://github.com/tin6150/phw251_group_z).
 
-```{r load-lib, include=FALSE, echo=FALSE}
+~~ This is a "verbose" version, where all code blocks are shown ~~
+
+```{r load-lib, include=T, echo=T}
 library(tidyverse)
 library(dplyr)
-library(kableExtra)
+#library(kableExtra) ## no longer needed in this version
 library(lubridate)
 library(ggplot2)
 library(plotly)
@@ -29,7 +31,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
 
 
-```{r massage mortality data, echo=FALSE, include=FALSE}
+```{r massage mortality data, echo=T, include=T}
 
 ## Loading & Cleaning data : Mortality
 
@@ -106,7 +108,7 @@ chronic_by_county = chronic_mortality_data %>%
 
 ```
 
-```{r massage funding data, echo=FALSE, include=FALSE}
+```{r massage funding data, echo=T, include=T}
 
 # Loading HCAI funding Data 
 
@@ -169,7 +171,7 @@ funding_data_closure <- funding_data %>%
 
 
 
-```{r spot checks, echo=FALSE, include=FALSE}
+```{r spot checks, echo=T, include=T}
 
 
 funding_data_closure %>% arrange( Numeric_Cost ) %>% head( 10 )
@@ -253,7 +255,7 @@ chk_allSrc
 ```
 
 
-```{r massage demographics data, echo=FALSE, include=FALSE}
+```{r massage demographics data, echo=T, include=T}
 
 
 # Load demographics data
@@ -309,7 +311,7 @@ demographics_data = demographics_data %>%
 ```
 
 
-```{r demographics data complete set high rental, old age, echo=FALSE, include=FALSE}
+```{r demographics data complete set high rental, old age, echo=T, include=T}
 
 high_rental_ratio = 
   rural_counties %>% arrange( desc( rent_own_ratio  ) ) 
@@ -342,7 +344,7 @@ triple_whammy = demographics_data %>%
 ```
 
 
-```{r demographics data RURAL set only, high rental, old age, echo=FALSE, include=FALSE}
+```{r demographics data RURAL set only, high rental, old age, echo=T, include=T}
 
 ## Use only RURAL counties to calculate their averages, and what's above average
 
@@ -368,7 +370,7 @@ rural_demographics_data = demographics_data %>%
 #-- sn50 =  rural_demographics_data %>% filter( rural_class == "rural" ) 
 ```
 
-```{r tmp-double-whammy, include=FALSE, echo=FALSE}
+```{r tmp-double-whammy, include=T, echo=T}
 
 rural_double_whammy = rural_demographics_data %>%
   filter( 
@@ -384,7 +386,7 @@ rural_demographics_data %>% arrange( rent_own_ratio, med_age ) %>% head( 6 )
 ```
 
 
-```{r dem relaxed criteria: old age, high rental in rural standard, echo=FALSE, include=FALSE}
+```{r dem relaxed criteria: old age, high rental in rural standard, echo=T, include=T}
 
 ## determine old age as > avg age for full data set
 ## then pick rural countries, 
@@ -409,7 +411,7 @@ focus_demographics_data = demographics_data %>%
 
 ```
 
-```{r tmp-focus,  include=FALSE, echo=FALSE }
+```{r tmp-focus,  include=T, echo=T }
 
 focus_dem = rural_demographics_data %>%
   filter( 
@@ -428,7 +430,7 @@ rural_demographics_data %>%
 
 
 
-```{r discussion-use-only,  include=FALSE, echo=FALSE}
+```{r discussion-use-only,  include=T, echo=T}
 
 ## decide if need to output any of these tables
 ## likely need to refine further 
@@ -450,7 +452,7 @@ focus_dem %>% head( 13 )
 
 
 
-```{r calc chronic mortality rate, echo=F, include=F}
+```{r calc chronic mortality rate, echo=T, include=T}
 # calc chronic mortality rate using census pop12 as denominator
 
 # First need to Join Chronics mortality data (by county, last 5 years)
@@ -472,7 +474,7 @@ avg_chronic_mortality_per100k = mean( demographics_chronic$per100k )
 
 
 
-```{r join tables, echo=FALSE, include=FALSE}
+```{r join tables, echo=T, include=T}
 
 
 fund_dem_chron = inner_join( demographics_chronic,
@@ -501,7 +503,7 @@ viz_fund_dem_chron = fund_dem_chron %>%
 ```
 
 
-```{r spot_check_mortality_from_source_data, echo=FALSE, include=FALSE }
+```{r spot_check_mortality_from_source_data, echo=T, include=T }
 
 # grabbing data from raw source 
 
@@ -517,7 +519,7 @@ mortality_data_raw %>%
 
 ```
 
-```{r spot_check_mortality, echo=FALSE, include=FALSE }
+```{r spot_check_mortality, echo=T, include=T }
 
 # viz_fund_dem_chron is just fund_dem_chron with fewer columns
 
@@ -541,7 +543,7 @@ scm2 = demographics_chronic %>%
 
 ```
 
-```{r draft-viz-for-discussion-only, echo=FALSE, include=FALSE }
+```{r draft-viz-for-discussion-only, echo=T, include=T }
 
 #### for viz, ponder about using these, or derivative thereof 
 
